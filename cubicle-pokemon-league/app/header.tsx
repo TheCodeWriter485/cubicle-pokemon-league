@@ -1,3 +1,4 @@
+import NewsMarquee from "./marquee";
 import Navbar from "./navbar";
 import Image from "next/image";
 
@@ -12,6 +13,7 @@ export default function Header(){
           style={{margin:"0 auto", marginTop: "2rem"}}
           priority
         />
+    <NewsMarquee />
       <Navbar />
         </div>
     );
