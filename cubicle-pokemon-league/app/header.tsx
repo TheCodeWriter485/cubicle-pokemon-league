@@ -4,7 +4,7 @@ import Image from "next/image";
 
 export default function Header(){
     return (
-        <div>
+      <header>
         <Image
           src="/Cubical.png"
           alt="Cubical Logo"
@@ -13,8 +13,8 @@ export default function Header(){
           style={{margin:"0 auto", marginTop: "2rem"}}
           priority
         />
-    <NewsMarquee />
-      <Navbar />
-        </div>
+        <NewsMarquee />
+        <Navbar />
+      </header>
     );
 }
