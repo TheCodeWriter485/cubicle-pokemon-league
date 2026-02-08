@@ -11,8 +11,8 @@ app.use(cors())
 const db = mysql.createConnection({
     host: "localHost",
     user: 'root',
-    password: "",
-    database: 'crud'
+    password: "Cubicle*2022",
+    database: 'cubicleData'
 
 })
 
@@ -21,15 +21,15 @@ app.get('/', (re,res)=> {
 
 }) 
 
-app.get('/users', (req,res)=> {
-    const sql = " SELECT * FROM users"
+app.get('/pokedata', (req,res)=> {
+    const sql = " SELECT * FROM Pokemon"
     db.query(sql, (err,data)=> {
         if(err) return res.json(err);
         return res.json(data);
     })
 })
 
-app.listen(8081, ()=> {
+app.listen(3030, ()=> {
     console.log("listening");
 })
 
