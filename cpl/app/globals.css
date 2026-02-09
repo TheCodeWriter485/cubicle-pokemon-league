@@ -1,27 +1,279 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #000000;
+/*
+  ____                    _                            _   
+ |  _ \ __ _  __ _  ___  | |    __ _ _   _  ___  _   _| |_ 
+ | |_) / _` |/ _` |/ _ \ | |   / _` | | | |/ _ \| | | | __|
+ |  __/ (_| | (_| |  __/ | |__| (_| | |_| | (_) | |_| | |_ 
+ |_|   \__,_|\__, |\___| |_____\__,_|\__, |\___/ \__,_|\__|
+             |___/                   |___/                   
+*/
+*
+{
+  margin: 0;
+  padding: 0;
 }
 
+.layout
+{
+  width: 100%;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  display: grid;
+  grid:
+    "header" 30% "main" 60% "footer" 10% / 1fr;
+  gap: 8px;
+  grid-auto-flow: row dense;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #000000;
-    --foreground: #ffffff;
-  }
+.header
+{
+  grid-area: header;
+
+
 }
 
-body {
+.main
+{
+  grid-area: main;
+}
+
+.footer
+{
+  grid-area: footer;
+}
+
+/*
+  _____         _     _____                          _   _   _             
+ |_   _|____  _| |_  |  ___|__  _ __ _ __ ___   __ _| |_| |_(_)_ __   __ _ 
+   | |/ _ \ \/ / __| | |_ / _ \| '__| '_ ` _ \ / _` | __| __| | '_ \ / _` |
+   | |  __/>  <| |_  |  _| (_) | |  | | | | | | (_| | |_| |_| | | | | (_| |
+   |_|\___/_/\_\\__| |_|  \___/|_|  |_| |_| |_|\__,_|\__|\__|_|_| |_|\__, |
+                                                                     |___/ 
+*/
+
+
+.body
+{
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+
+  font-family: "Press Start 2P", system-ui;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.link
+{
+  color: #ffffff;
+  text-decoration: none;
+}
+
+
+/* 
+ __     ___                 _   _____ _                           _       
+ \ \   / (_)___ _   _  __ _| | | ____| | ___ _ __ ___   ___ _ __ | |_ ___ 
+  \ \ / /| / __| | | |/ _` | | |  _| | |/ _ \ '_ ` _ \ / _ \ '_ \| __/ __|
+   \ V / | \__ \ |_| | (_| | | | |___| |  __/ | | | | |  __/ | | | |_\__ \
+    \_/  |_|___/\__,_|\__,_|_| |_____|_|\___|_| |_| |_|\___|_| |_|\__|___/
+                                                                          
+*/
+
+.headerContent
+{
+
+  overflow: hidden;
+  display: flex;
+  flex-flow: row;
+  flex-wrap: wrap;
+
+  justify-content: space-between;
+  align-content: baseline;
+  background: var(--headerBackground);
+  Width: 100%;
+}
+
+.navBar
+{
+  display: flex;
+
+  Width: 100%;
+  gap: 10px 10px;
+  right: 0;
+}
+
+.topNav
+{
+  margin: 1%;
+  display: flex;
+}
+
+.chyron
+{
+  background: var(--chyronBackground);
+
+  Width: 100%;
+  height: 20px;
+  align-content: center;
+}
+
+.page
+{
+  margin: 1%;
+  padding: 1%;
+  gap: 40px;
+  display: flex;
+  flex-flow: row;
+  align-content: baseline;
+  height: 100%;
+  width: 100%;
+  flex-grow: 1;
+}
+
+.window
+{
+  padding: 2%;
+
+  background: #20232D;
+  max-width: 70%;
+  min-height: 100%;
+  border-radius: 60px 10px 10px 10px;
+
+  overflow: scroll;
+  scrollbar-width: none;
+  flex-grow: 1;
+}
+
+.sideNav
+{
+  display: flex;
+  flex-flow: column;
+
+  padding: 1%;
+  background: #20232D;
+
+  max-width: 15%;
+  min-height: 90%;
+
+  border-radius: 10px;
+  gap: 10px;
+  overflow: scroll;
+  scrollbar-width: none;
+}
+
+.logoContainer
+{
+  display: flex;
+  z-index: 10;
+}
+
+.logoBackground
+{
+  position: absolute;
+  top: 1%;
+  left: 1%;
+  background: var(--logoBackground);
+  width: 250px;
+  height: 250px;
+
+  border-radius: 100%;
+
+  align-content: center;
+  padding: 1em;
+}
+
+/*
+  ____        _   _                  
+ | __ ) _   _| |_| |_ ___  _ __  ___ 
+ |  _ \| | | | __| __/ _ \| '_ \/ __|
+ | |_) | |_| | |_| || (_) | | | \__ \
+ |____/ \__,_|\__|\__\___/|_| |_|___/
+                                     
+*/
+
+.navButton1
+{
+  background: var(--button1Background);
+
+  border-radius: 5px;
+  width: 100%;
+  height: 20;
+}
+
+.navButton1:hover
+{
+  background: var(--buttonHover);
+}
+
+.navButton2
+{
+  background: var(--button2Background);
+
+  border-radius: 5px;
+  width: 100%;
+  height: 20;
+}
+
+.navButton2:hover
+{
+  background: var(--buttonHover);
+}
+
+.sideButton
+{
+  padding: 10px;
+  width: 100%;
+  height: 20px;
+  background: #14161B;
+  border-radius: 10px;
+  height: auto;
+  width: auto;
+}
+
+.sideButton:hover
+{
+  background: #858A9D;
+}
+
+.navDiv
+{
+  display: flex;
+  flex-flow: column;
+  gap: 10px;
+}
+
+/*
+  ____             _            ____                  _  __ _          
+ |  _ \  _____   _(_) ___ ___  / ___| _ __   ___  ___(_)/ _(_) ___ ___ 
+ | | | |/ _ \ \ / / |/ __/ _ \ \___ \| '_ \ / _ \/ __| | |_| |/ __/ __|
+ | |_| |  __/\ V /| | (_|  __/  ___) | |_) |  __/ (__| |  _| | (__\__ \
+ |____/ \___| \_/ |_|\___\___| |____/| .__/ \___|\___|_|_| |_|\___|___/
+                                     |_|                                                          
+*/
+
+:root
+{
+  --background: #e9e7f1;
+  --foreground: #ffffff;
+  --headerBackground: #ff5858;
+  --chyronBackground: #20232D;
+  --button1Background: #7BE55A;
+  --button2Background: #FFF36D;
+  --buttonHover: #3932FF;
+  --logoBackground: #3932FF;
+}
+
+@media (prefers-color-scheme: dark)
+{
+  :root
+  {
+    --background: #14161B;
+    --foreground: #ffffff;
+    --headerBackground: #20232D;
+    --chyronBackground: #ff5858;
+    --button1Background: #FF5858;
+    --button2Background: #FFC26D;
+    --buttonHover: #ffffff;
+    --logoBackground: #FFC26D;
+  }
 }
