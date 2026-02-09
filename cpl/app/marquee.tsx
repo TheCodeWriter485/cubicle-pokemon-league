@@ -4,10 +4,8 @@ import Image from "next/image";
 import Papa from "papaparse";
 //import file from "../public/schedule.csv";
 
-export default function NewsMarquee()
-{
-  function cardSched()
-  {
+export default function NewsMarquee() {
+  function cardSched() {
     const date = new Date();
     const scheduleMap = {
       1: new Date("2026-1-4"),
@@ -24,3 +22,4 @@ export default function NewsMarquee()
         This is a test announcement for the news area
       </Marquee>
     </div>);
+}
