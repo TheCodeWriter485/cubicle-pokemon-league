@@ -6,7 +6,7 @@ export default function TierList() {
   const [pokemon, setPokemon] = useState(null);
 
   useEffect(() => {
-    fetch('http://localhost:3030/users')
+    fetch('http://localhost:3030/pokedata')
     .then((res) => res.json())
     .then((res) => {
       //make temp array of array
