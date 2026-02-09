@@ -23,8 +23,12 @@ export default function Header() {
       <NewsMarquee />
     </header>
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
   );
 }
+=======
+  );}
+>>>>>>> Stashed changes
 =======
   );}
 >>>>>>> Stashed changes

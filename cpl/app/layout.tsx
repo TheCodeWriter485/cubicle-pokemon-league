@@ -34,8 +34,12 @@ export default function RootLayout
       </body>
     </html>
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
   );
 }
+=======
+  );}
+>>>>>>> Stashed changes
 =======
   );}
 >>>>>>> Stashed changes

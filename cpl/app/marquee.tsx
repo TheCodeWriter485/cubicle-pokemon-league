@@ -7,6 +7,9 @@ export default function NewsMarquee() {
 =======
 export default function NewsMarquee()
 {
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
   return (
@@ -15,8 +18,12 @@ export default function NewsMarquee()
         This is a test announcement for the news area
       </Marquee>
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     </div>);
 }
+=======
+    </div>);}
+>>>>>>> Stashed changes
 =======
     </div>);}
 >>>>>>> Stashed changes
