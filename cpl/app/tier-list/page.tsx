@@ -25,7 +25,6 @@ export default function TierList() {
       res = arr
       
       setPokemon(res)
-      console.log(res)
     })
   },[])
 
@@ -42,7 +41,7 @@ export default function TierList() {
             Tier List
           </h1>
           <p>
-            {JSON.stringify(pokemon)}
+            {JSON.stringify(pokemon[0][0])}
           </p>
         </div>
       </main>
