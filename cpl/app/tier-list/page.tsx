@@ -9,17 +9,21 @@ export default function TierList() {
     fetch('http://localhost:3030/pokedata')
     .then((res) => res.json())
     .then((res) => {
+      let arr: string[][] = Array.from({ length: 22 }, () => []);
+      let count = 0;
       //make temp array of array
       // if loop to sort pokemon by pointvalue
       // sort pokemon
       // setPokemon(res)
       // Issue #1 v
-      res.map((pkmn:{
-        PointValue : number
-      })=>{
-        console.log(pkmn.PointValue)
 
-      })
+      while(count < res.length){
+        arr[res[count].PointValue].push(res[count]);
+        count+=1;
+      }
+
+      res = arr
+      
       setPokemon(res)
       console.log(res)
     })
