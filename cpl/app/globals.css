@@ -21,21 +21,19 @@
 
   display: grid;
   grid:
-    "header" 30% "main" 60% "footer" 10% / 1fr;
+    "header" auto "main" 1fr "footer" auto / 1fr;
   gap: 8px;
-  grid-auto-flow: row dense;
 }
 
 .header
 {
   grid-area: header;
-
-
 }
 
 .main
 {
   grid-area: main;
+  flex-grow: 1;
 }
 
 .footer
