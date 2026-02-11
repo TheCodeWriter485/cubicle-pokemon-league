@@ -29,9 +29,9 @@ export default function TierList()
         res = arr
 
         setPokemon(res)
-        console.log(res)
       })
   }, [])
+
 
   //need function that returns a Div for each invidual Pokemon and a Div that returns the entire tier they're nested in
   const displayMon = () =>
@@ -50,7 +50,7 @@ export default function TierList()
           Tier List
         </h1>
         <p>
-          { JSON.stringify(pokemon) }
+          { JSON.stringify(pokemon[0][0]) }
         </p>
       </div>
     </main>
