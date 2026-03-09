@@ -2,7 +2,7 @@
 //connects to future pokemon database to pull pokemon, teams and matches out
 
 const express = require('express');
-const mysql = require('mysql')
+const mysql = require('mysql2')
 const cors = require('cors')
 
 const app = express()
