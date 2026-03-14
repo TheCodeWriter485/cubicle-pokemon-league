@@ -48,6 +48,12 @@ export default function TierList()
       
   }, [pokemon])
 
+  function Car({poke}) {
+  return (
+    <h2>I am a {poke} Car!</h2>
+  );
+}
+
   return (
     <main className="page">
       <div className="sideNav">
@@ -61,7 +67,9 @@ export default function TierList()
             <div key={tierIndex}>
               {tier.map((poke: any, pokeIndex: number) => (
                 <div key={pokeIndex} className="pokemon-card">
-                  <img src={'https://pokeapi.co/api/v2/pokemon/{poke.name}/sprite[front_default]'} alt={poke.name} />
+                  
+                  
+                  <h3>{poke.PointValue}</h3>
                   <h3>{poke.NamePoke}</h3>
                 </div>
               ))}
