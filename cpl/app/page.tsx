@@ -1,15 +1,13 @@
+import SideBar from "./sidebar";
+
 export default function Home()
 {
+  const bookmarks = [{ id: 1, name: 'button' }]
   return (
     <main className="page">
-      <div className="sideNav">
-
-        <div className="sideButton">Leaderboard </div>
-        <div className="sideButton">Rules</div>
-        <div className="sideButton">Resource</div>
-        <div className="sideButton">Pokedex</div>
-        <div className="sideButton">Showdown</div>
-
+      <div className="sideContainer">
+        <div className="spacer"></div>
+        <SideBar bookmarks={ bookmarks } />
       </div>
 
       <div className="window">

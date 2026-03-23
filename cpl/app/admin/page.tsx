@@ -1,13 +1,12 @@
-
+import SideBar from "../sidebar";
 import MatchForm from '@/app/match_form'
 
 export default function Admin()
 {
+    const bookmarks = [{ id: 1, name: 'button' }]
     return (
         <main className="page">
-            <div className="sideNav">
-
-            </div>
+            <SideBar bookmarks={ bookmarks } />
             <div className="window">
 
                 <h1>

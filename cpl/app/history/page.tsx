@@ -1,11 +1,10 @@
-
+import SideBar from "../sidebar";
 export default function History()
 {
+  const bookmarks = [{ id: 1, name: 'button' }]
   return (
     <main className="page">
-      <div className="sideNav">
-
-      </div>
+      <SideBar bookmarks={ bookmarks } />
       <div className="window">
 
         <h1>

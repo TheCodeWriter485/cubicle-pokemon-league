@@ -1,10 +1,10 @@
+import SideBar from "../sidebar";
 export default function News()
 {
+  const bookmarks = [{ id: 1, name: 'button' }]
   return (
     <main className="page">
-      <div className="sideNav">
-
-      </div>
+      <SideBar bookmarks={ bookmarks } />
       <div className="window">
 
         <h1>

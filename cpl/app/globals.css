@@ -20,25 +20,27 @@
   width: 100%;
 
   display: grid;
-  grid:
-    "header" auto "main" 1fr "footer" auto / 1fr;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
   gap: 8px;
 }
 
 .header
 {
-  grid-area: header;
+  grid-row: 1;
+  grid-column: 1 / span 8;
 }
 
 .main
 {
-  grid-area: main;
-  flex-grow: 1;
+  grid-column: 1 / span 8;
+  grid-row: 2 / 8;
 }
 
 .footer
 {
-  grid-area: footer;
+  grid-column: 1 / span 8;
+  grid-row: 8;
 }
 
 /*
@@ -79,7 +81,6 @@
 
 .headerContent
 {
-
   overflow: hidden;
   display: flex;
   flex-flow: row;
@@ -117,29 +118,38 @@
 
 .page
 {
-  margin: 1%;
-  padding: 1%;
-  gap: 40px;
   display: flex;
   flex-flow: row;
-  align-content: baseline;
   height: 100%;
   width: 100%;
-  flex-grow: 1;
+  padding: 1%;
+  gap: 40px;
+
+
 }
 
 .window
 {
+  display: flex;
+  flex-flow: column;
   padding: 2%;
 
   background: #20232D;
-  max-width: 70%;
-  min-height: 100%;
-  border-radius: 60px 10px 10px 10px;
+  border-radius: 100px 10px 10px 10px;
 
   overflow: scroll;
   scrollbar-width: none;
-  flex-grow: 1;
+  flex: 4;
+  flex-basis: 100%;
+}
+
+.sideContainer
+{
+  display: flex;
+  flex-flow: column;
+
+  flex: 1;
+  flex-basis: 15%;
 }
 
 .sideNav
@@ -147,16 +157,21 @@
   display: flex;
   flex-flow: column;
 
-  padding: 1%;
+  padding: 5%;
   background: #20232D;
 
-  max-width: 15%;
-  min-height: 90%;
-
-  border-radius: 10px;
+  border-radius: 20px;
   gap: 10px;
+
+  flex: 4;
+
   overflow: scroll;
   scrollbar-width: none;
+}
+
+.spacer
+{
+  flex: 1;
 }
 
 .logoContainer
@@ -165,14 +180,18 @@
   z-index: 10;
 }
 
+.logoImg
+{
+  width: 100%;
+}
+
 .logoBackground
 {
   position: absolute;
   top: 1%;
   left: 1%;
   background: var(--logoBackground);
-  width: 250px;
-  height: 250px;
+  width: 12em;
 
   border-radius: 100%;
 
