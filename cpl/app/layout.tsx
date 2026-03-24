@@ -30,7 +30,7 @@ export default function RootLayout
           </div>
 
           <div className="footer">
-            cubicle
+            ()cubicle
           </div>
 
         </div>
