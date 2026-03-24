@@ -6,7 +6,10 @@ export default function Admin()
     const bookmarks = [{ id: 1, name: 'button' }]
     return (
         <main className="page">
-            <SideBar bookmarks={ bookmarks } />
+            <div className="sideContainer">
+
+                <SideBar bookmarks={ bookmarks } />
+            </div>
             <div className="window">
 
                 <h1>
