@@ -2,18 +2,9 @@
 import { useEffect, useState } from 'react'
 import { PokemonClient } from 'pokenode-ts'; // Import the Client
 import SideBar from "../sidebar";
+import Card from "../card";
+import CardGroup from 'react-bootstrap/CardGroup';
 //pokecard for later
-function Headline(props: { name: string, value: number })
-{
-  return (
-    <h1>
-      { props.name }
-      <h3>
-        { props.value }
-      </h3>
-    </h1>
-  );
-}
 export default function TierList()
 {
   const [pokemon, setPokemon] = useState<string[][]>([]);
@@ -43,22 +34,22 @@ export default function TierList()
 
   }, [pokemon])
 
-
+  let tier = "0";
   const bookmarks = [{ id: 1, name: 'button' }]
   return (
-
     <main className="page">
       <SideBar bookmarks={ bookmarks } />
       <div className="window">
         <h1>
           Tier List
         </h1>
-        <h2>
+        <h2 style={{ display: "flex"}}>
           { pokemon.map((tier, tierIndex) => (
             <div key={ tierIndex }>
               { tier.map((poke: any, pokeIndex: number) => (
                 <div key={ pokeIndex } className="pokemon-card">
-                  <Headline name={ poke.NamePoke } value={ poke.PointValue } />
+                  <script>console.log(pokeIndex)</script>
+                  <Card name={ poke.NamePoke } value={ poke.PointValue } image={poke.ID} />
                 </div>
               )) }
             </div>
