@@ -3,15 +3,16 @@ import { useEffect, useState } from 'react'
 import { PokemonClient } from 'pokenode-ts'; // Import the Client
 import SideBar from "../sidebar";
 //pokecard for later
-function Headline(props: { name: string, value: number }) {
+function Headline(props: { name: string, value: number })
+{
   return (
-  <h1>
-    {props.name}
+    <h1>
+      { props.name }
       <h3>
-        {props.value}
-  </h3>
-  </h1>
-);
+        { props.value }
+      </h3>
+    </h1>
+  );
 }
 export default function TierList()
 {
@@ -43,9 +44,9 @@ export default function TierList()
   }, [pokemon])
 
 
- const bookmarks = [{ id: 1, name: 'button' }]
+  const bookmarks = [{ id: 1, name: 'button' }]
   return (
-    
+
     <main className="page">
       <SideBar bookmarks={ bookmarks } />
       <div className="window">
@@ -53,11 +54,11 @@ export default function TierList()
           Tier List
         </h1>
         <h2>
-          {pokemon.map((tier, tierIndex) => (
-            <div key={tierIndex}>
-              {tier.map((poke: any, pokeIndex: number) => (
-                <div key={pokeIndex} className="pokemon-card">
-                  <Headline name={poke.NamePoke} value={poke.PointValue} />
+          { pokemon.map((tier, tierIndex) => (
+            <div key={ tierIndex }>
+              { tier.map((poke: any, pokeIndex: number) => (
+                <div key={ pokeIndex } className="pokemon-card">
+                  <Headline name={ poke.NamePoke } value={ poke.PointValue } />
                 </div>
               )) }
             </div>

@@ -6,7 +6,7 @@ export default function Home()
   return (
     <main className="page">
       <div className="sideContainer">
-        <div className="spacer"></div>
+
         <SideBar bookmarks={ bookmarks } />
       </div>
 
