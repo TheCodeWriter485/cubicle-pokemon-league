@@ -25,7 +25,6 @@ const db = mysql.createConnection({
     user: 'root',
     password: "Cubicle*2022",
     database: 'cubicleData'
-
 })
 
 app.get('/', (req, res) => {
@@ -54,6 +53,7 @@ app.post('/auth', (req, res) => {
                 if (match) {
                     req.session.loggedin = true;
                     req.session.username = username;
+                    req.session.admin = results[0].admin;
                     res.send('Logged in successfully!');
                 } else {
                     res.send('Incorrect Username and/or Password!');
@@ -70,11 +70,13 @@ app.get('/auth/status', (req, res) => {
     if (req.session.loggedin) {
         res.json({
             loggedin: true,
-            username: req.session.username
+            username: req.session.username,
+            admin: req.session.admin
         });
     } else {
         res.json({
-            loggedin: false
+            loggedin: false,
+            admin: false
         });
     }
 });
@@ -91,9 +93,10 @@ app.post('/auth/logout', (req, res) => {
 app.post('/account/create', (req, res) => {
     let username = req.body.username;
     let password = req.body.password;
+    let admin = req.body.admin;
     bcrypt.hash(password, 10, (err, hash) => {
         if (err) return res.json(err);
-        db.query('INSERT INTO accounts (username, password) VALUES (?, ?)', [username, hash], (err, results) => {
+        db.query('INSERT INTO accounts (username, password, admin) VALUES (?, ?, ?)', [username, hash, admin], (err, results) => {
             if (err) return res.json(err);
             return res.json(results);
         });
