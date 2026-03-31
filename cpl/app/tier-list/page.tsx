@@ -10,7 +10,7 @@ export default function TierList()
   const [pokemon, setPokemon] = useState<string[][]>([]);
   const api = new PokemonClient();
   //need function that returns a Div for each invidual Pokemon and a Div that returns the entire tier they're nested in
-  
+
   useEffect(() =>
   {
     fetch('http://localhost:3030/pokedata')
@@ -43,18 +43,18 @@ export default function TierList()
         <h1>
           Tier List
         </h1>
-        <h2 style={{ display: "flex"}}>
+        <div style={ { display: "flex" } }>
           { pokemon.map((tier, tierIndex) => (
             <div key={ tierIndex }>
               { tier.map((poke: any, pokeIndex: number) => (
                 <div key={ pokeIndex } className="pokemon-card">
                   <script>console.log(pokeIndex)</script>
-                  <Card name={ poke.NamePoke } value={ poke.PointValue } image={poke.ID} />
+                  <Card name={ poke.NamePoke } value={ poke.PointValue } image={ poke.ID } />
                 </div>
               )) }
             </div>
           )) }
-        </h2>
+        </div>
       </div>
     </main>
   );

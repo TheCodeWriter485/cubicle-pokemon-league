@@ -1,11 +1,22 @@
-import { useRef } from 'react';
-export default function SideBarButton({ b })
+"use client"
+export default function SideBarButton({ bookmarks })
 {
 
 
-    const ScrollToElement = () =>
+    function ScrollToElement()
     {
-        const element = document.getElementById(b.id);
-        element?.scrollIntoView({ behavior: 'smooth' })
+        const element = document.getElementById(bookmarks.id);
+
+        //const { scrollX, scrollY } = window;
+        element?.scrollIntoView({ behavior: 'smooth' });
+        // window.scroll(scrollX, scrollY);
+
+        //element.parentElement.scrollTop = element.offsetTop - 50;
     }
+
+    return (
+
+        <button onClick={ ScrollToElement } className="sideButton" >{ bookmarks.name }</button>
+
+    );
 }

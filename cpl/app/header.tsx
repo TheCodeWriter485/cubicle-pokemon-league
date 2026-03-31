@@ -12,6 +12,7 @@ export default function Header()
         <div className="logoContainer">
           <div className="logoBackground">
             <img className="logoImg" src="/CubicleLogo.svg" alt="Cubical Logo" />
+
           </div>
         </div>
 

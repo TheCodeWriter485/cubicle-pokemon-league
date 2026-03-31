@@ -20,14 +20,13 @@ export default function RootLayout
           <div className="header">
             <Header />
           </div>
-
           <div className="main">
             { children }
           </div>
 
-          <div className="footer">
-            ()cubicle
-          </div>
+          {/* <div className="footer">
+            Cubicle
+          </div> */}
 
         </div>
       </body>
