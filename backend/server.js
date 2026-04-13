@@ -56,13 +56,14 @@ app.post('/auth', (req, res) => {
                     req.session.admin = results[0].admin;
                     res.send('Logged in successfully!');
                 } else {
-                    res.send('Incorrect Username and/or Password!');
+                    res.status(401).send('Incorrect Username and/or Password!');
                 }
             }
         });
-    } else {
-        res.send('Please enter Username and Password!');
-        res.end();
+    }
+    else {
+        console.log("Please enter Username and Password!");
+        res.status(401).send('Please enter Username and Password!');
     }
 });
 

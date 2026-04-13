@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react'
 export default function Navbar() {
     const [loggedIn, setLoggedIn] = useState(false)
     const [isOpen, setIsOpen] = useState(false)
+    const [isAdmin, setIsAdmin] = useState(false)
     const [username, setUsername] = useState("")
     const [password, setPassword] = useState("")
     async function checkLogin() {
@@ -16,6 +17,7 @@ export default function Navbar() {
         })
         const data = await response.json()
         setLoggedIn(data.loggedin)
+        setIsAdmin(data.admin)
     }
     useEffect(() => {
         checkLogin()
@@ -29,6 +31,7 @@ export default function Navbar() {
         // const result = await response.json();
         // console.log(JSON.stringify(result));
         await checkLogin();
+        window.location.reload();
     };
 
     const handleLogin = async () => {
@@ -40,9 +43,13 @@ export default function Navbar() {
             credentials: "include",
             body: JSON.stringify({ username: username, password: password }),
         });
+        if (response.status === 401) {
+            alert("Incorrect Username and/or Password!");
+            return;
+        }
         await checkLogin();
         setIsOpen(false);
-        // const result = await response.json();
+        window.location.reload();
     };
 
     return (
@@ -72,6 +79,12 @@ export default function Navbar() {
                     <Link className='navButton1' href="/history"> </Link>
                     <Link className='link' href="/history">History</Link>
                 </div>
+                {isAdmin ? (
+                    <div className='navDiv'>
+                        <Link className='navButton1' href="/admin"></Link>
+                        <Link className='link' href="/admin">Admin</Link>
+                    </div>
+                ) : <></>}
                 <div className='navDiv'>
                     {loggedIn ? (
                         <div>
