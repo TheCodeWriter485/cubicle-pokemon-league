@@ -1,6 +1,7 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import Header from './header'
+import Login from './login'
 
 export const metadata: Metadata = {
   title: "Cubicle Pokemon League",
@@ -10,8 +11,7 @@ export const metadata: Metadata = {
 export default function RootLayout
   (
     { children, }: Readonly<{ children: React.ReactNode; }>
-  )
-{
+  ) {
   return (
     <html lang="en">
       <body className="body">
@@ -20,8 +20,9 @@ export default function RootLayout
           <div className="header">
             <Header />
           </div>
+
           <div className="main">
-            { children }
+            {children}
           </div>
 
           {/* <div className="footer">
