@@ -1,14 +1,13 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { PokemonClient } from 'pokenode-ts'; // Import the Client
+import { PokemonClient } from 'pokenode-ts';
 import SideBar from "../sidebar";
 import Card from "../card";
 import CardGroup from 'react-bootstrap/CardGroup';
-//pokecard for later
+
 export default function TierList() {
   const [pokemon, setPokemon] = useState<string[][]>([]);
   const api = new PokemonClient();
-  //need function that returns a Div for each invidual Pokemon and a Div that returns the entire tier they're nested in
 
   useEffect(() => {
     fetch('http://localhost:3030/pokedata')
@@ -23,40 +22,32 @@ export default function TierList() {
         }
 
         res = arr
-
         setPokemon(res);
-
       })
 
   }, [pokemon])
 
-  let tier = "0";
   const bookmarks = [{ id: 1, name: 'button' }]
   return (
     <main className="page">
       <SideBar bookmarks={bookmarks} />
       <div className="window">
-        <h1>
-          Tier List
-        </h1>
-        {/* Beginning of card
-        Flex allows grid? */}
+        <h1>Tier List</h1>
         <div style={{ display: "flex" }}>
-          {/* map through pokemon database */}
           {pokemon.map((tier, tierIndex) => (
-            // tier is the point from the database
-            // tier index is the value you use to group pokemon
-            <div key={tierIndex}>
-              {tier.map((poke: any, pokeIndex: number) => (
-                // pokemon card class
-                <div key={pokeIndex} className="pokemon-card">
-                  {/* Using poke as the object, Card takes a string for name
-                takes a number for value
-                and ID for image */}
-                  <Card name={poke.NamePoke} value={poke.PointValue} image={poke.ID} />
-                </div>
-              ))}
-            </div>
+            <div key={tierIndex} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+
+    {/* Tier Header */}
+    <div style={{ textAlign: 'center', fontWeight: 'bold', fontSize: '1.5rem', marginBottom: '8px' }}>
+        {tierIndex}
+    </div>
+
+    {tier.map((poke: any, pokeIndex: number) => (
+        <div key={pokeIndex} className="pokemon-card">
+            <Card name={poke.NamePoke} value={poke.PointValue} image={poke.ID} />
+        </div>
+    ))}
+</div>
           ))}
         </div>
       </div>
