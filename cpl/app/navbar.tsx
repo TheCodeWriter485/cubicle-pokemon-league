@@ -80,7 +80,12 @@ export default function Navbar() {
                 </div>
                 <div className='navDiv'>
 
-                    <Link className='navButton1' href="/history"> </Link>
+                    <Link className='navButton1' href="/item-shop"> </Link>
+                    <Link className='link' href="/item-shop">Item Shop</Link>
+                </div>                
+                <div className='navDiv'>
+
+                    <Link className='navButton2' href="/history"> </Link>
                     <Link className='link' href="/history">History</Link>
                 </div>
                 {isAdmin ? (
