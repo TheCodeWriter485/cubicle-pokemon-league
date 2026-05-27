@@ -221,7 +221,23 @@ app.get("/accounts", (req, res) => {
 })
 
 app.get("/matches", (req, res) => {
-    const sql = "SELECT * FROM matches"
+    const sql = `
+        SELECT
+            matches.*,
+            team1.id AS team_1_id,
+            team1.Username AS team_1_username,
+            team1.League AS team_1_league,
+            team1.TeamName AS team_1_name,
+            team1.Logo AS team_1_logo,
+            team2.id AS team_2_id,
+            team2.Username AS team_2_username,
+            team2.League AS team_2_league,
+            team2.TeamName AS team_2_name,
+            team2.Logo AS team_2_logo
+        FROM matches
+        LEFT JOIN team AS team1 ON matches.team_1 = team1.id
+        LEFT JOIN team AS team2 ON matches.team_2 = team2.id
+    `
     db.query(sql, (err, data) => {
         if (err) return res.json(err);
         return res.json(data);
@@ -241,9 +257,9 @@ app.post("/matches/update", (req, res) => {
 })
 
 app.post("/matches/create", (req, res) => {
-    const { player1, player2, week } = req.body;
-    const sql = "INSERT INTO matches (player1, player2, week) VALUES (?, ?, ?)";
-    db.query(sql, [player1, player2, week], (err, data) => {
+    const { team_1, team_2, week } = req.body;
+    const sql = "INSERT INTO matches (team_1, team_2, week) VALUES (?, ?, ?)";
+    db.query(sql, [team_1, team_2, week], (err, data) => {
         if (err) return res.json(err);
         return res.json(data);
     })
