@@ -104,6 +104,53 @@ app.post('/account/create', (req, res) => {
     })
 })
 
+app.get("/accounts", (req, res) => {
+    const sql = "SELECT username FROM accounts"
+    db.query(sql, (err, data) => {
+        if (err) return res.json(err);
+        return res.json(data);
+    })
+})
+
+app.get("/matches", (req, res) => {
+    const sql = "SELECT * FROM matches"
+    db.query(sql, (err, data) => {
+        if (err) return res.json(err);
+        return res.json(data);
+    })
+})
+
+app.post("/matches/update", (req, res) => {
+    const match_id = req.body.match_id;
+    const match_data = req.body.match_data;
+    const winner = req.body.winner;
+    const done = 1;
+    const sql = "UPDATE matches SET match_data = ?, done = ?, winner = ? WHERE match_id = ?";
+    db.query(sql, [JSON.stringify(match_data), done, winner, match_id], (err, data) => {
+        if (err) return res.json(err);
+        return res.json(data);
+    })
+})
+
+app.post("/matches/create", (req, res) => {
+    const { player1, player2, week } = req.body;
+    const sql = "INSERT INTO matches (player1, player2, week) VALUES (?, ?, ?)";
+    db.query(sql, [player1, player2, week], (err, data) => {
+        if (err) return res.json(err);
+        return res.json(data);
+    })
+})
+
+app.delete("/matches/delete/:id", (req, res) => {
+    const match_id = req.params.id;
+    const sql = "DELETE FROM matches WHERE match_id = ?";
+    db.query(sql, [match_id], (err, data) => {
+        if (err) return res.json(err);
+        return res.json(data);
+    })
+})
+
+
 app.listen(3030, () => {
     console.log("listening");
 })

@@ -65,6 +65,10 @@ export default function Navbar() {
                     <Link className='link' href="/news">News</Link>
                 </div>
                 <div className='navDiv'>
+                    <Link className='navButton1' href="/schedule"> </Link>
+                    <Link className='link' href="/schedule">Schedule</Link>
+                </div>
+                <div className='navDiv'>
 
                     <Link className='navButton1' href="/teams"> </Link>
                     <Link className='link' href="/teams">Teams</Link>

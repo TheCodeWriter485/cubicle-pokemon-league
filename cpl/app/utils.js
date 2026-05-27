@@ -123,7 +123,7 @@ export function parseMatchData(data) {
         }
     }
     const output = {
-        match_id: data.id,
+        id: data.id,
         pokemon_kills: kills,
         pokemon_deaths: deaths,
         winner: winner,
