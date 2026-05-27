@@ -3,7 +3,7 @@ import Form from 'next/form'
 import { useState, useEffect } from 'react'
 import { parseMatchData } from './utils';
 
-export default function MatchForm() {
+export default function MatchForm({ match, onClose }: { match?: any, onClose?: () => void }) {
     const [round1, setRound1] = useState(null);
     const [round2, setRound2] = useState(null);
     const [round3, setRound3] = useState(null);
@@ -16,7 +16,7 @@ export default function MatchForm() {
         // We will compile the match data here everytime the rounds are updated
         // Structure of match data will be:
         // {
-        //     "match_ids": ["", "", ""],
+        //     "round_ids": ["", "", ""],
         //     "round_data": [{}, {}, {}],
         //     "total_pokemon_kills": {},
         //     "total_pokemon_deaths": {},
@@ -32,7 +32,7 @@ export default function MatchForm() {
         //         winner: false
         //     }
         // }
-        let match_ids = [];
+        let round_ids = [];
         let round_data = [];
         let total_pokemon_kills_temp = [];
         let total_pokemon_deaths_temp = [];
@@ -49,7 +49,7 @@ export default function MatchForm() {
         }
 
         if (round1) {
-            match_ids.push(round1.match_id);
+            round_ids.push(round1.id);
             round_data.push(round1);
             total_pokemon_kills_temp.push(round1.pokemon_kills);
             total_pokemon_deaths_temp.push(round1.pokemon_deaths);
@@ -62,7 +62,7 @@ export default function MatchForm() {
         }
 
         if (round2) {
-            match_ids.push(round2.match_id);
+            round_ids.push(round2.id);
             round_data.push(round2);
             total_pokemon_kills_temp.push(round2.pokemon_kills);
             total_pokemon_deaths_temp.push(round2.pokemon_deaths);
@@ -75,7 +75,7 @@ export default function MatchForm() {
         }
 
         if (round3) {
-            match_ids.push(round3.match_id);
+            round_ids.push(round3.id);
             round_data.push(round3);
             total_pokemon_kills_temp.push(round3.pokemon_kills);
             total_pokemon_deaths_temp.push(round3.pokemon_deaths);
@@ -96,7 +96,7 @@ export default function MatchForm() {
         }
 
         setMatchData({
-            match_ids: match_ids,
+            round_ids: round_ids,
             round_data: round_data,
             total_pokemon_kills: total_pokemon_kills_temp,
             total_pokemon_deaths: total_pokemon_deaths_temp,
@@ -122,12 +122,12 @@ export default function MatchForm() {
             });
     }
 
-    const round_data_preview = (match_data: any) => {
+    const round_data_preview = (round_data: any) => {
         return (
             <div className="overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-sm mt-4">
                 <table className="w-full text-left border-collapse">
                     <thead>
-                        <tr key={match_data.p1.name + match_data.p2.name} className="bg-zinc-50 dark:bg-zinc-900/50 border-b border-zinc-200 dark:border-zinc-800">
+                        <tr key={round_data.p1.name + round_data.p2.name} className="bg-zinc-50 dark:bg-zinc-900/50 border-b border-zinc-200 dark:border-zinc-800">
                             <th className="px-4 py-3 text-sm font-semibold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">Player</th>
                             <th className="px-4 py-3 text-sm font-semibold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">KO</th>
                             <th className="px-4 py-3 text-sm font-semibold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">Diff</th>
@@ -136,43 +136,43 @@ export default function MatchForm() {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-                        <tr key={match_data.p1.name} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-900/20 transition-colors">
-                            <td className="px-4 py-3 text-sm font-medium text-zinc-900 dark:text-zinc-100">{match_data.p1.name} {match_data.p1.winner ? "(Winner 🏆)" : ""}</td>
-                            <td className="px-4 py-3 text-sm text-zinc-600 dark:text-zinc-400">{match_data.p1.kills}</td>
-                            <td className="px-4 py-3 text-sm text-zinc-600 dark:text-zinc-400">{match_data.p1.diff}</td>
-                            <td className="px-4 py-3 text-sm text-zinc-600 dark:text-zinc-400">{match_data.p1.pokemon_left}</td>
-                            <td key={match_data.p1.pokemon.join(", ")} className="px-4 py-3 text-sm text-zinc-600 dark:text-zinc-400 italic">{match_data.p1.pokemon.join(", ")}</td>
+                        <tr key={round_data.p1.name} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-900/20 transition-colors">
+                            <td className="px-4 py-3 text-sm font-medium text-zinc-900 dark:text-zinc-100">{round_data.p1.name} {round_data.p1.winner ? "(Winner 🏆)" : ""}</td>
+                            <td className="px-4 py-3 text-sm text-zinc-600 dark:text-zinc-400">{round_data.p1.kills}</td>
+                            <td className="px-4 py-3 text-sm text-zinc-600 dark:text-zinc-400">{round_data.p1.diff}</td>
+                            <td className="px-4 py-3 text-sm text-zinc-600 dark:text-zinc-400">{round_data.p1.pokemon_left}</td>
+                            <td key={round_data.p1.pokemon.join(", ")} className="px-4 py-3 text-sm text-zinc-600 dark:text-zinc-400 italic">{round_data.p1.pokemon.join(", ")}</td>
                         </tr>
-                        <tr key={match_data.p2.pokemon.join(", ")} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-900/20 transition-colors">
-                            <td className="px-4 py-3 text-sm font-medium text-zinc-900 dark:text-zinc-100">{match_data.p2.name} {match_data.p2.winner ? "(Winner 🏆)" : ""}</td>
-                            <td className="px-4 py-3 text-sm text-zinc-600 dark:text-zinc-400">{match_data.p2.kills}</td>
-                            <td className="px-4 py-3 text-sm text-zinc-600 dark:text-zinc-400">{match_data.p2.diff}</td>
-                            <td className="px-4 py-3 text-sm text-zinc-600 dark:text-zinc-400">{match_data.p2.pokemon_left}</td>
-                            <td className="px-4 py-3 text-sm text-zinc-600 dark:text-zinc-400 italic">{match_data.p2.pokemon.join(", ")}</td>
+                        <tr key={round_data.p2.pokemon.join(", ")} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-900/20 transition-colors">
+                            <td className="px-4 py-3 text-sm font-medium text-zinc-900 dark:text-zinc-100">{round_data.p2.name} {round_data.p2.winner ? "(Winner 🏆)" : ""}</td>
+                            <td className="px-4 py-3 text-sm text-zinc-600 dark:text-zinc-400">{round_data.p2.kills}</td>
+                            <td className="px-4 py-3 text-sm text-zinc-600 dark:text-zinc-400">{round_data.p2.diff}</td>
+                            <td className="px-4 py-3 text-sm text-zinc-600 dark:text-zinc-400">{round_data.p2.pokemon_left}</td>
+                            <td className="px-4 py-3 text-sm text-zinc-600 dark:text-zinc-400 italic">{round_data.p2.pokemon.join(", ")}</td>
                         </tr>
                     </tbody>
                 </table>
                 <table className="w-full text-left border-collapse">
                     <thead>
-                        <tr key={match_data.p1.pokemon.join(", ") + match_data.p2.pokemon.join(", ")} className="bg-zinc-50 dark:bg-zinc-900/50 border-b border-zinc-200 dark:border-zinc-800">
+                        <tr key={round_data.p1.pokemon.join(", ") + round_data.p2.pokemon.join(", ")} className="bg-zinc-50 dark:bg-zinc-900/50 border-b border-zinc-200 dark:border-zinc-800">
                             <th className="px-4 py-3 text-sm font-semibold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">Pokemon</th>
                             <th className="px-4 py-3 text-sm font-semibold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">Kills</th>
                             <th className="px-4 py-3 text-sm font-semibold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">Deaths</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-                        {match_data.p1.pokemon.map((pokemon: string) => (
+                        {round_data.p1.pokemon.map((pokemon: string) => (
                             <tr key={pokemon} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-900/20 transition-colors">
                                 <td className="px-4 py-3 text-sm font-medium text-zinc-900 dark:text-zinc-100">{pokemon}</td>
-                                <td className="px-4 py-3 text-sm text-zinc-600 dark:text-zinc-400">{match_data.pokemon_kills[pokemon]}</td>
-                                <td className="px-4 py-3 text-sm text-zinc-600 dark:text-zinc-400">{match_data.pokemon_deaths[pokemon]}</td>
+                                <td className="px-4 py-3 text-sm text-zinc-600 dark:text-zinc-400">{round_data.pokemon_kills[pokemon]}</td>
+                                <td className="px-4 py-3 text-sm text-zinc-600 dark:text-zinc-400">{round_data.pokemon_deaths[pokemon]}</td>
                             </tr>
                         ))}
-                        {match_data.p2.pokemon.map((pokemon: string) => (
+                        {round_data.p2.pokemon.map((pokemon: string) => (
                             <tr key={pokemon} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-900/20 transition-colors">
                                 <td className="px-4 py-3 text-sm font-medium text-zinc-900 dark:text-zinc-100">{pokemon}</td>
-                                <td className="px-4 py-3 text-sm text-zinc-600 dark:text-zinc-400">{match_data.pokemon_kills[pokemon]}</td>
-                                <td className="px-4 py-3 text-sm text-zinc-600 dark:text-zinc-400">{match_data.pokemon_deaths[pokemon]}</td>
+                                <td className="px-4 py-3 text-sm text-zinc-600 dark:text-zinc-400">{round_data.pokemon_kills[pokemon]}</td>
+                                <td className="px-4 py-3 text-sm text-zinc-600 dark:text-zinc-400">{round_data.pokemon_deaths[pokemon]}</td>
                             </tr>
                         ))}
                     </tbody>
@@ -190,10 +190,35 @@ export default function MatchForm() {
         )
     }
 
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!match || !match_data) return;
+
+        try {
+            const response = await fetch('http://localhost:3030/matches/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    match_id: match.match_id,
+                    match_data: match_data,
+                    winner: (match_data as any).match_winner
+                })
+            });
+            if (response.ok) {
+                alert("Match updated successfully!");
+                if (onClose) onClose();
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
     return (
         <div>
             <h1 className="text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">Match Data Input Form</h1>
-            <Form className="flex flex-col gap-2" action="/admin">
+            <form className="flex flex-col gap-2" onSubmit={handleSubmit}>
                 <label htmlFor="round1">Round 1 URL:</label>
                 <div className="flex gap-2">
                     <input className="bg-zinc-50 text-black rounded-md p-2" name="round1" />
@@ -217,7 +242,7 @@ export default function MatchForm() {
                 {round3 && showRound3 ? round_data_preview(round3) : null}
                 {match_data ? match_data_preview(match_data) : null}
                 <button className="bg-blue-400 text-white rounded-md p-2 hover:bg-blue-500 cursor-pointer mt-4" type="submit">Submit Final Data</button>
-            </Form>
+            </form>
         </div>
     );
 }
