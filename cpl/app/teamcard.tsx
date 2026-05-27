@@ -9,7 +9,6 @@ export function PokemonTeamCard(props: { name: string, isOwner?: boolean, teamId
     const [pokeData, setPokeData] = useState<any>(null);
     const [dbData, setDbData] = useState<any>(null);
     const [show, setShow] = useState(false);
-    const [showSell, setShowSell] = useState(false);
     const ref = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -32,17 +31,12 @@ export function PokemonTeamCard(props: { name: string, isOwner?: boolean, teamId
 
     async function handleSell() {
         try {
-            // Remove from teammembers
             await fetch("http://localhost:3030/teammembers/delete", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    team_id: props.teamId,
-                    pokemon: props.name
-                })
+                body: JSON.stringify({ team_id: props.teamId, pokemon: props.name })
             });
 
-            // Refund points
             const teamRes = await fetch("http://localhost:3030/team");
             const teams = await teamRes.json();
             const userTeam = teams.find((t: any) => t.Username === props.username);
@@ -56,18 +50,14 @@ export function PokemonTeamCard(props: { name: string, isOwner?: boolean, teamId
                 })
             });
 
-            // Clear OwnedBy
             await fetch("http://localhost:3030/pokemon/claim", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    username: null,
-                    pokemonName: props.name
-                })
+                body: JSON.stringify({ username: null, pokemonName: props.name })
             });
 
             alert(`${props.name} sold successfully!`);
-            setShowSell(false);
+            setShow(false);
             window.location.reload();
         } catch (err) {
             console.error("Error selling pokemon:", err);
@@ -78,10 +68,8 @@ export function PokemonTeamCard(props: { name: string, isOwner?: boolean, teamId
     return (
         <div
             ref={ref}
-            onMouseEnter={() => setShow(true)}
-            onMouseLeave={() => { setShow(false); }}
-            onClick={() => { if (props.isOwner) { setShow(false); setShowSell(true); } }}
-            style={{ display: 'inline-block', textAlign: 'center', cursor: props.isOwner ? 'pointer' : 'default', margin: '4px' }}
+            onClick={() => setShow(!show)}
+            style={{ display: 'inline-block', textAlign: 'center', cursor: 'pointer', margin: '4px' }}
         >
             {pokeData && (
                 <img
@@ -93,8 +81,7 @@ export function PokemonTeamCard(props: { name: string, isOwner?: boolean, teamId
             )}
             <div style={{ fontSize: '0.75rem', fontWeight: 'bold' }}>{props.name}</div>
 
-            {/* Hover info popover (non-owners) */}
-            <Overlay target={ref.current} show={show && !showSell} placement="top">
+            <Overlay target={ref.current} show={show} placement="top" rootClose onHide={() => setShow(false)}>
                 <Popover style={{ backgroundColor: '#000000', border: '1px solid #e3d109', maxWidth: '250px', zIndex: 9999 }}>
                     <Popover.Header className="text-center" style={{ color: 'white', backgroundColor: '#111' }}>{props.name}</Popover.Header>
                     <Popover.Body style={{ color: 'white' }}>
@@ -128,19 +115,18 @@ export function PokemonTeamCard(props: { name: string, isOwner?: boolean, teamId
                         ) : (
                             <p>Loading...</p>
                         )}
-                    </Popover.Body>
-                </Popover>
-            </Overlay>
 
-            {/* Sell popover (owners only) */}
-            <Overlay target={ref.current} show={showSell} placement="top" rootClose onHide={() => setShowSell(false)}>
-                <Popover style={{ backgroundColor: '#000000', border: '1px solid #e3d109', maxWidth: '250px', zIndex: 9999 }}>
-                    <Popover.Body className="text-center" style={{ color: 'white' }}>
-                        <p>Do you wish to sell <strong>{props.name}</strong> for <strong>{dbData?.PointValue} points</strong>?</p>
-                        <div className="d-flex justify-content-center gap-2">
-                            <Button variant="success" size="sm" onClick={handleSell}>Yes</Button>
-                            <Button variant="secondary" size="sm" onClick={() => setShowSell(false)}>No</Button>
-                        </div>
+                        {/* Sell button only for owner */}
+                        {props.isOwner && dbData && (
+                            <>
+                                <hr style={{ borderColor: '#e3d109' }} />
+                                <div className="d-flex justify-content-center">
+                                    <Button variant="danger" size="sm" onClick={handleSell}>
+                                        Sell for {dbData.PointValue} pts
+                                    </Button>
+                                </div>
+                            </>
+                        )}
                     </Popover.Body>
                 </Popover>
             </Overlay>
@@ -152,7 +138,6 @@ export function PokemonTeamCard(props: { name: string, isOwner?: boolean, teamId
 export function ItemTeamCard(props: { name: string, isOwner?: boolean, teamId?: number, username?: string }) {
     const [itemData, setItemData] = useState<any>(null);
     const [show, setShow] = useState(false);
-    const [showSell, setShowSell] = useState(false);
     const ref = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -171,17 +156,12 @@ export function ItemTeamCard(props: { name: string, isOwner?: boolean, teamId?: 
 
     async function handleSell() {
         try {
-            // Remove from teamitems
             await fetch("http://localhost:3030/teamitems/delete", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    team_id: props.teamId,
-                    item: props.name
-                })
+                body: JSON.stringify({ team_id: props.teamId, item: props.name })
             });
 
-            // Refund points
             const teamRes = await fetch("http://localhost:3030/team");
             const teams = await teamRes.json();
             const userTeam = teams.find((t: any) => t.Username === props.username);
@@ -196,7 +176,7 @@ export function ItemTeamCard(props: { name: string, isOwner?: boolean, teamId?: 
             });
 
             alert(`${props.name} sold successfully!`);
-            setShowSell(false);
+            setShow(false);
             window.location.reload();
         } catch (err) {
             console.error("Error selling item:", err);
@@ -207,10 +187,8 @@ export function ItemTeamCard(props: { name: string, isOwner?: boolean, teamId?: 
     return (
         <div
             ref={ref}
-            onMouseEnter={() => setShow(true)}
-            onMouseLeave={() => { setShow(false); }}
-            onClick={() => { if (props.isOwner) { setShow(false); setShowSell(true); } }}
-            style={{ display: 'inline-block', textAlign: 'center', cursor: props.isOwner ? 'pointer' : 'default', margin: '4px' }}
+            onClick={() => setShow(!show)}
+            style={{ display: 'inline-block', textAlign: 'center', cursor: 'pointer', margin: '4px' }}
         >
             {itemData && (
                 <img
@@ -222,8 +200,7 @@ export function ItemTeamCard(props: { name: string, isOwner?: boolean, teamId?: 
             )}
             <div style={{ fontSize: '0.75rem', fontWeight: 'bold' }}>{props.name}</div>
 
-            {/* Hover info popover (non-owners) */}
-            <Overlay target={ref.current} show={show && !showSell} placement="top">
+            <Overlay target={ref.current} show={show} placement="top" rootClose onHide={() => setShow(false)}>
                 <Popover style={{ backgroundColor: '#000000', border: '1px solid #e3d109', maxWidth: '250px', zIndex: 9999 }}>
                     <Popover.Header className="text-center" style={{ color: 'white', backgroundColor: '#111' }}>{props.name}</Popover.Header>
                     <Popover.Body style={{ color: 'white' }}>
@@ -235,19 +212,18 @@ export function ItemTeamCard(props: { name: string, isOwner?: boolean, teamId?: 
                         ) : (
                             <p>Loading...</p>
                         )}
-                    </Popover.Body>
-                </Popover>
-            </Overlay>
 
-            {/* Sell popover (owners only) */}
-            <Overlay target={ref.current} show={showSell} placement="top" rootClose onHide={() => setShowSell(false)}>
-                <Popover style={{ backgroundColor: '#000000', border: '1px solid #e3d109', maxWidth: '250px', zIndex: 9999 }}>
-                    <Popover.Body className="text-center" style={{ color: 'white' }}>
-                        <p>Do you wish to sell <strong>{props.name}</strong> for <strong>{itemData?.points} points</strong>?</p>
-                        <div className="d-flex justify-content-center gap-2">
-                            <Button variant="success" size="sm" onClick={handleSell}>Yes</Button>
-                            <Button variant="secondary" size="sm" onClick={() => setShowSell(false)}>No</Button>
-                        </div>
+                        {/* Sell button only for owner */}
+                        {props.isOwner && itemData && (
+                            <>
+                                <hr style={{ borderColor: '#e3d109' }} />
+                                <div className="d-flex justify-content-center">
+                                    <Button variant="danger" size="sm" onClick={handleSell}>
+                                        Sell for {itemData.points} pts
+                                    </Button>
+                                </div>
+                            </>
+                        )}
                     </Popover.Body>
                 </Popover>
             </Overlay>
