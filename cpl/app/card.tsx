@@ -163,11 +163,15 @@ export default function Card(props: { name: string, value: number, image: number
                 <Popover style={{ backgroundColor: '#000000', border: '1px solid #e3d109', maxWidth: '300px', zIndex: 9999 }}>
                     <Popover.Header as="h3" className="text-center">Purchase {props.name}?</Popover.Header>
                     <Popover.Body className="text-center">
+<<<<<<< Updated upstream
                         <img
                             src={`/sprites/sprites/pokemon/${props.image}.png`}
                             alt={props.name}
                             style={{ width: '80px', height: '80px', objectFit: 'contain' }}
                         />
+=======
+                        <img src={"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/"+ props.image +".png"} />
+>>>>>>> Stashed changes
                         <p><strong>Price:</strong> {props.value} points</p>
 
                         {pokeStats ? (

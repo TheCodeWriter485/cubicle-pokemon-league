@@ -1,55 +1,63 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { PokemonClient } from 'pokenode-ts';
 import SideBar from "../sidebar";
 import Card from "../card";
-import CardGroup from 'react-bootstrap/CardGroup';
 
 export default function TierList() {
   const [pokemon, setPokemon] = useState<string[][]>([]);
-  const api = new PokemonClient();
 
   useEffect(() => {
     fetch('http://localhost:3030/pokedata')
       .then((res) => res.json())
       .then((res) => {
-        let arr: string[][] = Array.from({ length: 22 }, () => []);
+        let arr: string[][] = Array.from({ length: 21 }, () => []);
         let count = 0;
-        setPokemon(arr);
         while (count < res.length) {
-          arr[res[count].PointValue].push(res[count]);
+          const pointValue = res[count].PointValue;
+          // Ignore anything 21 or higher
+          if (pointValue <= 20) {
+            arr[pointValue].push(res[count]);
+          }
           count += 1;
         }
-
-        res = arr
-        setPokemon(res);
+        setPokemon(arr);
       })
-
-  }, [pokemon])
+  }, [])
 
   const bookmarks = [{ id: 1, name: 'button' }]
+
+  // Reverse so we start at 20 and go down to 0
+  const reversedTiers = [...pokemon].reverse();
+
   return (
     <main className="page">
       <SideBar bookmarks={bookmarks} />
       <div className="window">
         <h1>Tier List</h1>
-        <div style={{ display: "flex" }}>
-          {pokemon.map((tier, tierIndex) => (
-            <div key={tierIndex} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        {reversedTiers.map((tier, index) => {
+          const tierIndex = 20 - index;
+          return (
+            <div key={tierIndex} style={{ marginBottom: '2rem' }}>
 
-    {/* Tier Header */}
-    <div style={{ textAlign: 'center', fontWeight: 'bold', fontSize: '1.5rem', marginBottom: '8px' }}>
-        {tierIndex}
-    </div>
+              {/* Tier Header */}
+              <h2 style={{ textAlign: 'center', fontWeight: 'bold', fontSize: '2rem', borderBottom: '2px solid #dee2e6', marginBottom: '12px' }}>
+                {tierIndex} Points
+              </h2>
 
-    {tier.map((poke: any, pokeIndex: number) => (
-        <div key={pokeIndex} className="pokemon-card">
-            <Card name={poke.NamePoke} value={poke.PointValue} image={poke.ID} />
-        </div>
-    ))}
-</div>
-          ))}
-        </div>
+              {/* Pokemon Row */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '16px' }}>
+                {tier.length > 0
+                  ? tier.map((poke: any, pokeIndex: number) => (
+                    <div key={pokeIndex} className="pokemon-card">
+                      <Card name={poke.NamePoke} value={poke.PointValue} image={poke.ID} />
+                    </div>
+                  ))
+                  : <p style={{ color: '#6c757d' }}>No Pokémon at this tier</p>
+                }
+              </div>
+            </div>
+          );
+        })}
       </div>
     </main>
   );
