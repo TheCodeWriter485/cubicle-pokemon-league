@@ -5,26 +5,35 @@ import Overlay from 'react-bootstrap/Overlay';
 import Popover from 'react-bootstrap/Popover';
 import Box from 'react-bootstrap/Card';
 
-export default function Card(props: { name: string, value: number, image: number }) {
-    const [show, setShow] = useState(false);
+export default function Card(props: { name: string, value: number, image: number, ownedByOverride?: string | null }) {
     const [showPurchase, setShowPurchase] = useState(false);
     const [loggedIn, setLoggedIn] = useState(false);
     const [username, setUsername] = useState("");
     const [pokeStats, setPokeStats] = useState<any>(null);
     const [ownedBy, setOwnedBy] = useState<string | null>(null);
-    const buyButtonRef = useRef<HTMLButtonElement>(null);
+    const cardRef = useRef<HTMLDivElement>(null);
 
-    const handleClose = () => setShow(false);
-    const handleShow = () => setShow(true);
+    // Sync ownedBy with the override from parent whenever it changes
+    useEffect(() => {
+        if (props.ownedByOverride !== undefined) {
+            setOwnedBy(props.ownedByOverride ?? null);
+        }
+    }, [props.ownedByOverride]);
+
     const handlePurchaseClose = () => setShowPurchase(false);
     const handlePurchaseShow = () => {
-        setShowPurchase(true);
-        fetchPokeData();
+        if (!ownedBy) {
+            setShowPurchase(true);
+            fetchPokeData();
+        }
     };
 
     useEffect(() => {
         checkLogin();
-        checkOwnership();
+        // Only do individual ownership fetch if no override is provided
+        if (props.ownedByOverride === undefined) {
+            checkOwnership();
+        }
     }, [])
 
     async function checkLogin() {
@@ -58,7 +67,6 @@ export default function Card(props: { name: string, value: number, image: number
             return;
         }
 
-        // Species clause check
         if (ownedBy !== null) {
             alert(`${props.name} is already owned by ${ownedBy}.`);
             handlePurchaseClose();
@@ -74,7 +82,6 @@ export default function Card(props: { name: string, value: number, image: number
             return;
         }
 
-        // 10 Pokemon limit check
         const membersRes = await fetch("http://localhost:3030/team/full");
         const fullTeams = await membersRes.json();
         const userFullTeam = fullTeams.find((team: any) => team.Username === username);
@@ -85,14 +92,12 @@ export default function Card(props: { name: string, value: number, image: number
             return;
         }
 
-        // Points check
         if (Number(userTeam.Points) - Number(props.value) < 0) {
             alert("You don't have enough points to purchase this Pokemon.");
             handlePurchaseClose();
             return;
         }
 
-        // Add to teammembers
         const purchaseResponse = await fetch("http://localhost:3030/teammates/create", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -105,7 +110,6 @@ export default function Card(props: { name: string, value: number, image: number
         const result = await purchaseResponse.json();
 
         if (purchaseResponse.ok) {
-            // Deduct points
             await fetch("http://localhost:3030/team/updatepoints", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -115,7 +119,6 @@ export default function Card(props: { name: string, value: number, image: number
                 })
             });
 
-            // Update OwnedBy in Pokemon database
             await fetch("http://localhost:3030/pokemon/claim", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -125,7 +128,6 @@ export default function Card(props: { name: string, value: number, image: number
                 })
             });
 
-            // Update local state so button disables immediately
             setOwnedBy(username);
             alert(`${props.name} purchased successfully!`);
         } else {
@@ -137,6 +139,35 @@ export default function Card(props: { name: string, value: number, image: number
     }
 
     return (
+        <div ref={cardRef} onClick={handlePurchaseShow} style={{ cursor: ownedBy ? 'default' : 'pointer' }}>
+            <img
+                src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${props.image}.png`}
+                alt={props.name}
+                loading="lazy"
+                style={{
+                    width: '96px',
+                    height: '96px',
+                    objectFit: 'contain',
+                    filter: ownedBy ? 'grayscale(100%)' : 'none',
+                    opacity: ownedBy ? 0.5 : 1
+                }}
+            />
+            <div style={{ fontSize: '0.8rem', textAlign: 'center', fontWeight: 'bold' }}>{props.name}</div>
+            <div style={{ fontSize: '0.75rem', textAlign: 'center', color: ownedBy ? '#999' : 'inherit' }}>
+                {ownedBy ? `Owned by ${ownedBy}` : `${props.value} pts`}
+            </div>
+
+            <Overlay target={cardRef.current} show={showPurchase} placement="top" rootClose onHide={handlePurchaseClose}>
+                <Popover style={{ backgroundColor: '#000000', border: '1px solid #e3d109', maxWidth: '300px', zIndex: 9999 }}>
+                    <Popover.Header as="h3" className="text-center" style={{ color: 'white', backgroundColor: '#111' }}>
+                        {props.name}
+                    </Popover.Header>
+                    <Popover.Body className="text-center" style={{ color: 'white' }}>
+                        <img
+                            src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${props.image}.png`}
+                            alt={props.name}
+                            style={{ width: '80px', height: '80px', objectFit: 'contain' }}
+                        />
         <Box style={{ width: '18rem' }}>
         <Box.Img
             variant="top"
@@ -168,9 +199,9 @@ export default function Card(props: { name: string, value: number, image: number
 
                         {pokeStats ? (
                             <>
-                                <hr />
+                                <hr style={{ borderColor: '#e3d109' }} />
                                 <p><strong>Abilities:</strong> {pokeStats.abilities.map((a: any) => a.ability.name).join(', ')}</p>
-                                <hr />
+                                <hr style={{ borderColor: '#e3d109' }} />
                                 <div style={{ textAlign: 'left' }}>
                                     <strong>Stats:</strong>
                                     {pokeStats.stats.map((s: any) => (
@@ -185,14 +216,14 @@ export default function Card(props: { name: string, value: number, image: number
                             <p>Loading...</p>
                         )}
 
-                        <hr />
+                        <hr style={{ borderColor: '#e3d109' }} />
                         <div className="d-flex justify-content-center gap-2">
-                            <Button variant="success" size="sm" onClick={handlePurchase}>Yes</Button>
-                            <Button variant="secondary" size="sm" onClick={handlePurchaseClose}>No</Button>
+                            <Button variant="success" size="sm" onClick={handlePurchase}>Buy</Button><br></br>
+                            <Button variant="secondary" size="sm" onClick={handlePurchaseClose}>Cancel</Button>
                         </div>
                     </Popover.Body>
                 </Popover>
             </Overlay>
-        </Box>
+        </div>
     );
 }

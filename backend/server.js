@@ -276,6 +276,14 @@ app.get('/itemshop', (req, res) => {
     })
 })
 
+app.get('/matches', (req, res) => {
+    const sql = "SELECT * FROM matches";
+    db.query(sql, (err, data) => {
+        if (err) return res.json(err);
+        return res.json(data);
+    });
+});
+
 app.post('/auth', (req, res) => {
     // Capture the input fields
     let username = req.body.username;
@@ -341,6 +349,24 @@ app.post('/account/create', (req, res) => {
     })
 })
 
+app.get('/draft/schedule', (req, res) => {
+    db.query('SELECT * FROM draftschedule', (err, data) => {
+        if (err) return res.json(err);
+        return res.json(data);
+    });
+});
+
+app.post('/draft/set', (req, res) => {
+    const { league, draft_date, start_time, end_time } = req.body;
+    db.query(
+        'INSERT INTO draftschedule (league, draft_date, start_time, end_time) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE draft_date = ?, start_time = ?, end_time = ?',
+        [league, draft_date, start_time, end_time, draft_date, start_time, end_time],
+        (err, results) => {
+            if (err) return res.json(err);
+            return res.json(results);
+        }
+    );
+});
 app.get("/accounts", (req, res) => {
     const sql = "SELECT username FROM accounts"
     db.query(sql, (err, data) => {

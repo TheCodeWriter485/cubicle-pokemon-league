@@ -1,22 +1,72 @@
+'use client'
+import { useEffect, useState } from 'react';
 import SideBar from "./sidebar";
 
-export default function Home()
-{
-  const bookmarks = [{ id: "please", name: 'halep' }, { id: "test", name: 'Test Button' }]
+export default function Home() {
+  const [teams, setTeams] = useState<any[]>([]);
+  const bookmarks = [{ id: "please", name: 'halep' }, { id: "test", name: 'Test Button' }];
+
+  useEffect(() => {
+    fetch('http://localhost:3030/team')
+      .then(res => res.json())
+      .then(data => setTeams(data));
+  }, []);
+
+  const getLeagueTeams = (league: string) => {
+    return teams
+      .filter(t => t.League === league)
+      .sort((a, b) => b.Elo - a.Elo);
+  };
+
+  const renderLeague = (league: string) => {
+    const leagueTeams = getLeagueTeams(league);
+    return (
+      <div style={{ flex: 1, padding: '0 1rem' }}>
+        <h3 style={{ textAlign: 'center', borderBottom: '2px solid #dee2e6', paddingBottom: '0.5rem', marginBottom: '1rem' }}>
+          {league} League
+        </h3>
+        {leagueTeams.length > 0 ? (
+          <ol style={{ paddingLeft: '1.5rem' }}>
+            {leagueTeams.map((team, i) => (
+              <li key={team.id} style={{ marginBottom: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontWeight: 'bold' }}>{team.TeamName}</span>
+                  <span style={{ fontSize: '0.85rem', color: '#6c757d', marginLeft: '8px' }}>
+                    {team.Wins}W / {team.Losses}L
+                  </span>
+                </div>
+                <div style={{ fontSize: '0.8rem', color: '#6c757d' }}>
+                  {team.Username} — Elo: {team.Elo}
+                </div>
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <p style={{ color: '#6c757d', textAlign: 'center' }}>No teams yet</p>
+        )}
+      </div>
+    );
+  };
+
+  const bookmarks2 = [{ id: "please", name: 'halep' }, { id: "test", name: 'Test Button' }]
+
   return (
     <main className="page">
-
-      <SideBar bookmarks={ bookmarks } />
-
+      <SideBar bookmarks={bookmarks} />
       <div id="main" className="window">
+        <h1>Welcome to the Cubicle Pokemon League!</h1>
 
-        <h1>
-          Welcome to the Cubicle Pokemon League!
-        </h1>
+        {/* League Rankings */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem', borderBottom: '2px solid #dee2e6', paddingBottom: '2rem' }}>
+          {renderLeague('Major')}
+          <div style={{ width: '1px', backgroundColor: '#dee2e6' }} />
+          {renderLeague('Intermediate')}
+          <div style={{ width: '1px', backgroundColor: '#dee2e6' }} />
+          {renderLeague('Minor')}
+        </div>
 
         <h1 id="please"> ;-;</h1>
         <div>
-
           Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent pharetra justo velit, et aliquet est congue in.
           Aliquam posuere odio a nulla vestibulum, vel fringilla mauris vestibulum. Donec condimentum ipsum metus, mollis faucibus mi efficitur eu.
           Praesent venenatis bibendum mauris ac efficitur. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas gravida convallis elit,
