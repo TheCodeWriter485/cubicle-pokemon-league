@@ -73,8 +73,7 @@ export function PokemonTeamCard(props: { name: string, isOwner?: boolean, teamId
         >
             {pokeData && (
                 <img
-                    src={`/sprites/sprites/pokemon/${pokeData.id}.png`}
-                    alt={props.name}
+                    src={"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/"+ pokeData.id +".png"}
                     style={{ width: '64px', height: '64px', objectFit: 'contain' }}
                     loading="lazy"
                 />
