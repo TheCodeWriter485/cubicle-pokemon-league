@@ -1,55 +1,18 @@
 'use client'
-import { useMemo, useState } from 'react'
+import Form from 'next/form'
+import { useState, useEffect } from 'react'
 import { parseMatchData } from './utils';
 
-type ScheduledMatch = {
-    match_id: number | string
-    team_1_name?: string
-    team_2_name?: string
-}
-
-type RoundPlayer = {
-    name: string
-    kills: number
-    diff: number
-    pokemon_left: number
-    pokemon: string[]
-    winner: boolean
-}
-
-type RoundData = {
-    id: string
-    p1: RoundPlayer
-    p2: RoundPlayer
-    pokemon_kills: Record<string, number>
-    pokemon_deaths: Record<string, number>
-}
-
-type MatchPlayer = {
-    name: string
-    round_wins: number
-    winner: boolean
-}
-
-type MatchData = {
-    round_ids: string[]
-    round_data: RoundData[]
-    total_pokemon_kills: Record<string, number>[]
-    total_pokemon_deaths: Record<string, number>[]
-    match_winner: string
-    p1: MatchPlayer
-    p2: MatchPlayer
-}
-
-export default function MatchForm({ match, onClose }: { match?: ScheduledMatch, onClose?: () => void }) {
-    const [round1, setRound1] = useState<RoundData | null>(null);
-    const [round2, setRound2] = useState<RoundData | null>(null);
-    const [round3, setRound3] = useState<RoundData | null>(null);
+export default function MatchForm({ match, onClose }: { match?: any, onClose?: () => void }) {
+    const [round1, setRound1] = useState(null);
+    const [round2, setRound2] = useState(null);
+    const [round3, setRound3] = useState(null);
+    const [match_data, setMatchData] = useState(null);
     const [showRound1, setShowRound1] = useState(false);
     const [showRound2, setShowRound2] = useState(false);
     const [showRound3, setShowRound3] = useState(false);
 
-    const match_data = useMemo<MatchData>(() => {
+    useEffect(() => {
         // We will compile the match data here everytime the rounds are updated
         // Structure of match data will be:
         // {
@@ -69,17 +32,17 @@ export default function MatchForm({ match, onClose }: { match?: ScheduledMatch, 
         //         winner: false
         //     }
         // }
-        const round_ids: string[] = [];
-        const round_data: RoundData[] = [];
-        const total_pokemon_kills_temp: Record<string, number>[] = [];
-        const total_pokemon_deaths_temp: Record<string, number>[] = [];
+        let round_ids = [];
+        let round_data = [];
+        let total_pokemon_kills_temp = [];
+        let total_pokemon_deaths_temp = [];
         let match_winner = "";
-        const p1 = {
+        let p1 = {
             name: "",
             round_wins: 0,
             winner: false
         }
-        const p2 = {
+        let p2 = {
             name: "",
             round_wins: 0,
             winner: false
@@ -132,7 +95,7 @@ export default function MatchForm({ match, onClose }: { match?: ScheduledMatch, 
             p2.winner = true;
         }
 
-        return {
+        setMatchData({
             round_ids: round_ids,
             round_data: round_data,
             total_pokemon_kills: total_pokemon_kills_temp,
@@ -140,7 +103,7 @@ export default function MatchForm({ match, onClose }: { match?: ScheduledMatch, 
             match_winner: match_winner,
             p1: p1,
             p2: p2
-        };
+        });
 
     }, [round1, round2, round3]);
 
@@ -150,18 +113,16 @@ export default function MatchForm({ match, onClose }: { match?: ScheduledMatch, 
             .then((res) => res.json())
             .then((res) => {
                 if (round === 1) {
-                    setRound1(parseMatchData(res) as unknown as RoundData);
+                    setRound1(parseMatchData(res));
                 } else if (round === 2) {
-                    setRound2(parseMatchData(res) as unknown as RoundData);
+                    setRound2(parseMatchData(res));
                 } else if (round === 3) {
-                    setRound3(parseMatchData(res) as unknown as RoundData);
+                    setRound3(parseMatchData(res));
                 }
             });
     }
 
-    const inputValue = (name: string) => (document.getElementsByName(name)[0] as HTMLInputElement | undefined)?.value || "";
-
-    const round_data_preview = (round_data: RoundData) => {
+    const round_data_preview = (round_data: any) => {
         return (
             <div className="overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-sm mt-4">
                 <table className="w-full text-left border-collapse">
@@ -220,8 +181,7 @@ export default function MatchForm({ match, onClose }: { match?: ScheduledMatch, 
         );
     }
 
-    const match_data_preview = (_matchData?: MatchData) => {
-        void _matchData;
+    const match_data_preview = () => {
         return (
             <div>
 
@@ -235,12 +195,6 @@ export default function MatchForm({ match, onClose }: { match?: ScheduledMatch, 
         if (!match || !match_data) return;
 
         try {
-            const winner = match_data.p1.winner
-                ? match.team_1_name || match_data.match_winner
-                : match_data.p2.winner
-                    ? match.team_2_name || match_data.match_winner
-                    : match_data.match_winner;
-
             const response = await fetch('http://localhost:3030/matches/update', {
                 method: 'POST',
                 headers: {
@@ -249,7 +203,7 @@ export default function MatchForm({ match, onClose }: { match?: ScheduledMatch, 
                 body: JSON.stringify({
                     match_id: match.match_id,
                     match_data: match_data,
-                    winner: winner
+                    winner: (match_data as any).match_winner
                 })
             });
             if (response.ok) {
@@ -268,21 +222,21 @@ export default function MatchForm({ match, onClose }: { match?: ScheduledMatch, 
                 <label htmlFor="round1">Round 1 URL:</label>
                 <div className="flex gap-2">
                     <input className="bg-zinc-50 text-black rounded-md p-2" name="round1" />
-                    <button className="bg-orange-400 text-white rounded-md p-2 hover:bg-orange-500 cursor-pointer" type="button" onClick={() => fetch_round_data(inputValue("round1"), 1)}>Add Round 1 Data</button>
+                    <button className="bg-orange-400 text-white rounded-md p-2 hover:bg-orange-500 cursor-pointer" type="button" onClick={() => fetch_round_data(document.getElementsByName("round1")[0].value, 1)}>Add Round 1 Data</button>
                     {round1 ? <button className="bg-teal-500 text-white rounded-md p-2 hover:bg-teal-600 cursor-pointer" type="button" onClick={() => setShowRound1(!showRound1)}>{showRound1 ? "Hide" : "Show"} Round 1 Data</button> : null}
                 </div>
                 {round1 && showRound1 ? round_data_preview(round1) : null}
                 <label htmlFor="round2">Round 2 URL:</label>
                 <div className="flex gap-2">
                     <input className="bg-zinc-50 text-black rounded-md p-2" name="round2" />
-                    <button className="bg-orange-400 text-white rounded-md p-2 hover:bg-orange-500 cursor-pointer" type="button" onClick={() => fetch_round_data(inputValue("round2"), 2)}>Add Round 2 Data</button>
+                    <button className="bg-orange-400 text-white rounded-md p-2 hover:bg-orange-500 cursor-pointer" type="button" onClick={() => fetch_round_data(document.getElementsByName("round2")[0].value, 2)}>Add Round 2 Data</button>
                     {round2 ? <button className="bg-teal-500 text-white rounded-md p-2 hover:bg-teal-600 cursor-pointer" type="button" onClick={() => setShowRound2(!showRound2)}>{showRound2 ? "Hide" : "Show"} Round 2 Data</button> : null}
                 </div>
                 {round2 && showRound2 ? round_data_preview(round2) : null}
                 <label htmlFor="round3">Round 3 URL (optional):</label>
                 <div className="flex gap-2">
                     <input className="bg-zinc-50 text-black rounded-md p-2" name="round3" />
-                    <button className="bg-orange-400 text-white rounded-md p-2 hover:bg-orange-500 cursor-pointer" type="button" onClick={() => fetch_round_data(inputValue("round3"), 3)}>Add Round 3 Data</button>
+                    <button className="bg-orange-400 text-white rounded-md p-2 hover:bg-orange-500 cursor-pointer" type="button" onClick={() => fetch_round_data(document.getElementsByName("round3")[0].value, 3)}>Add Round 3 Data</button>
                     {round3 ? <button className="bg-teal-500 text-white rounded-md p-2 hover:bg-teal-600 cursor-pointer" type="button" onClick={() => setShowRound3(!showRound3)}>{showRound3 ? "Hide" : "Show"} Round 3 Data</button> : null}
                 </div>
                 {round3 && showRound3 ? round_data_preview(round3) : null}

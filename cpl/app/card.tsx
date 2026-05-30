@@ -140,7 +140,7 @@ export default function Card(props: { name: string, value: number, image: number
         <Box style={{ width: '18rem' }}>
         <Box.Img
             variant="top"
-            src={"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/"+ props.image +".png"}
+            src={`/sprites/sprites/pokemon/${props.image}.png`}
             loading="lazy"
             style={{ filter: ownedBy ? 'grayscale(100%)' : 'none', opacity: ownedBy ? 0.5 : 1 }}
         />
@@ -163,7 +163,11 @@ export default function Card(props: { name: string, value: number, image: number
                 <Popover style={{ backgroundColor: '#000000', border: '1px solid #e3d109', maxWidth: '300px', zIndex: 9999 }}>
                     <Popover.Header as="h3" className="text-center">Purchase {props.name}?</Popover.Header>
                     <Popover.Body className="text-center">
-                        <img variant="top"  src={"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/"+ props.image +".png"} />
+                        <img
+                            src={`/sprites/sprites/pokemon/${props.image}.png`}
+                            alt={props.name}
+                            style={{ width: '80px', height: '80px', objectFit: 'contain' }}
+                        />
                         <p><strong>Price:</strong> {props.value} points</p>
 
                         {pokeStats ? (

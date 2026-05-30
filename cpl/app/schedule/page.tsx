@@ -3,26 +3,11 @@ import SideBar from "../sidebar";
 import { useEffect, useState } from "react";
 import MatchForm from "../match_form";
 
-type Match = {
-    match_id: number | string
-    week: string
-    done?: boolean | number
-    winner?: string
-    player1?: string
-    player2?: string
-    team_1?: number | string
-    team_2?: number | string
-    team_1_name?: string
-    team_2_name?: string
-    team_1_username?: string
-    team_2_username?: string
-}
-
 export default function Schedule() {
     const bookmarks = [{ id: 1, name: 'button' }]
-    const [matches, setMatches] = useState<Match[]>([]);
+    const [matches, setMatches] = useState<any[]>([]);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
+    const [selectedMatch, setSelectedMatch] = useState<any | null>(null);
 
     const fetchData = () => {
         fetch('http://localhost:3030/auth/status', {
@@ -36,7 +21,7 @@ export default function Schedule() {
             .then(res => res.json())
             .then(data => {
                 if (Array.isArray(data)) {
-                    const sorted = (data as Match[]).sort((a: Match, b: Match) => new Date(a.week).getTime() - new Date(b.week).getTime());
+                    const sorted = data.sort((a: any, b: any) => new Date(a.week).getTime() - new Date(b.week).getTime());
                     setMatches(sorted);
                 }
             })
@@ -52,19 +37,6 @@ export default function Schedule() {
         fetchData(); // Refresh to see updated done status
     };
 
-    const team1Name = (match: Match) => match.team_1_name || match.player1 || `Team ${match.team_1}`;
-    const team2Name = (match: Match) => match.team_2_name || match.player2 || `Team ${match.team_2}`;
-    const winnerName = (match: Match) => {
-        if (!match.winner) return "";
-        if (match.winner === match.team_1_username || match.winner === match.player1 || match.winner === match.team_1_name) {
-            return team1Name(match);
-        }
-        if (match.winner === match.team_2_username || match.winner === match.player2 || match.winner === match.team_2_name) {
-            return team2Name(match);
-        }
-        return match.winner;
-    };
-
     const groupedMatches = matches.reduce((acc, match) => {
         const weekDate = new Date(match.week).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' });
         if (!acc[weekDate]) {
@@ -72,7 +44,7 @@ export default function Schedule() {
         }
         acc[weekDate].push(match);
         return acc;
-    }, {} as Record<string, Match[]>);
+    }, {} as Record<string, any[]>);
 
     return (
         <main className="page flex min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100">
@@ -89,14 +61,14 @@ export default function Schedule() {
                 </header>
 
                 <div className="space-y-12">
-                    {Object.entries(groupedMatches).map(([weekDate, weekMatches]: [string, Match[]]) => (
+                    {Object.entries(groupedMatches).map(([weekDate, weekMatches]: [string, any]) => (
                         <div key={weekDate}>
                             <h2 className="text-2xl font-bold mb-6 flex items-center gap-4 text-zinc-800 dark:text-zinc-200">
                                 <span className="whitespace-nowrap">Week of {weekDate}</span>
                                 <div className="h-px bg-zinc-200 dark:bg-zinc-800 flex-1"></div>
                             </h2>
                             <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-                                {weekMatches.map((match: Match) => (
+                                {weekMatches.map((match: any) => (
                                     <div key={match.match_id}
                                         className={`group relative p-6 rounded-2xl border transition-all duration-300
                                              ${isLoggedIn ? 'hover:-translate-y-1 hover:shadow-xl dark:hover:shadow-teal-900/20 hover:border-teal-500/50' : ''}
@@ -120,20 +92,20 @@ export default function Schedule() {
 
                                         <div className="flex flex-col items-center justify-center space-y-4 my-6">
                                             <div className="text-xl font-bold text-center">
-                                                {team1Name(match)}
+                                                {match.player1}
                                             </div>
                                             <div className="text-sm font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest">
                                                 VS
                                             </div>
                                             <div className="text-xl font-bold text-center">
-                                                {team2Name(match)}
+                                                {match.player2}
                                             </div>
                                         </div>
 
                                         {match.winner && (
                                             <div className="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800 text-center">
                                                 <span className="text-sm text-zinc-500 dark:text-zinc-400">Winner: </span>
-                                                <span className="font-semibold text-amber-500 dark:text-amber-400">🏆 {winnerName(match)}</span>
+                                                <span className="font-semibold text-amber-500 dark:text-amber-400">🏆 {match.winner}</span>
                                             </div>
                                         )}
 
@@ -177,7 +149,7 @@ export default function Schedule() {
                         </button>
                         <div className="mb-6 pb-6 border-b border-zinc-200 dark:border-zinc-800">
                             <h2 className="text-2xl font-bold">
-                                Edit Match: <span className="text-teal-500">{team1Name(selectedMatch)}</span> vs <span className="text-blue-500">{team2Name(selectedMatch)}</span>
+                                Edit Match: <span className="text-teal-500">{selectedMatch.player1}</span> vs <span className="text-blue-500">{selectedMatch.player2}</span>
                             </h2>
                             <p className="text-sm text-zinc-500 mt-1">Week of {new Date(selectedMatch.week).toLocaleDateString()}</p>
                         </div>

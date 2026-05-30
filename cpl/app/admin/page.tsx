@@ -4,34 +4,16 @@ import MatchForm from '@/app/match_form'
 import AccountForm from '@/app/admin/account_form'
 import { useState, useEffect } from 'react'
 
-type Team = {
-    id: number | string
-    Username?: string
-    TeamName?: string
-}
-
-type Match = {
-    match_id: number | string
-    week: string
-    done?: boolean | number
-    player1?: string
-    player2?: string
-    team_1?: number | string
-    team_2?: number | string
-    team_1_name?: string
-    team_2_name?: string
-}
-
 export default function Admin() {
     const [loggedIn, setLoggedIn] = useState(false)
     const [isAdmin, setIsAdmin] = useState(false)
-    const [matches, setMatches] = useState<Match[]>([])
-    const [teams, setTeams] = useState<Team[]>([])
+    const [matches, setMatches] = useState<any[]>([])
+    const [accounts, setAccounts] = useState<any[]>([])
     const [selectedMatchId, setSelectedMatchId] = useState<string>("")
 
     // Create match state
-    const [team1, setTeam1] = useState("")
-    const [team2, setTeam2] = useState("")
+    const [player1, setPlayer1] = useState("")
+    const [player2, setPlayer2] = useState("")
     const [week, setWeek] = useState("")
 
     async function checkLogin() {
@@ -51,24 +33,18 @@ export default function Admin() {
         }
     }
 
-    async function fetchTeams() {
-        const response = await fetch("http://localhost:3030/team")
+    async function fetchAccounts() {
+        const response = await fetch("http://localhost:3030/accounts")
         const data = await response.json()
         if (Array.isArray(data)) {
-            setTeams(data)
+            setAccounts(data)
         }
     }
 
     useEffect(() => {
-        async function loadInitialData() {
-            await Promise.all([
-                checkLogin(),
-                fetchMatches(),
-                fetchTeams()
-            ])
-        }
-
-        loadInitialData()
+        checkLogin()
+        fetchMatches()
+        fetchAccounts()
     }, [])
 
     const handleCreateMatch = async (e: React.FormEvent) => {
@@ -78,15 +54,15 @@ export default function Admin() {
             const res = await fetch("http://localhost:3030/matches/create", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ team_1: team1, team_2: team2, week: formattedWeek })
+                body: JSON.stringify({ player1, player2, week: formattedWeek })
             })
             const data = await res.json()
             if (data.sqlMessage) {
                 alert("Error: " + data.sqlMessage)
             } else {
                 alert("Match created successfully!")
-                setTeam1("")
-                setTeam2("")
+                setPlayer1("")
+                setPlayer2("")
                 setWeek("")
                 fetchMatches()
             }
@@ -119,9 +95,6 @@ export default function Admin() {
     }
 
     const selectedMatch = matches.find(m => m.match_id.toString() === selectedMatchId)
-    const teamName = (team: Team) => team.TeamName || team.Username || `Team ${team.id}`
-    const matchTeam1Name = (match: Match) => match.team_1_name || match.player1 || `Team ${match.team_1}`
-    const matchTeam2Name = (match: Match) => match.team_2_name || match.player2 || `Team ${match.team_2}`
     const bookmarks = [{ id: 1, name: 'button' }]
 
     return (
@@ -134,7 +107,7 @@ export default function Admin() {
                             <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-teal-500 to-blue-500 bg-clip-text text-transparent mb-4">
                                 Admin Panel 🛠️
                             </h1>
-                            <p className="text-zinc-500 dark:text-zinc-400">Manage accounts, create team matches, and update match data.</p>
+                            <p className="text-zinc-500 dark:text-zinc-400">Manage accounts, create matches, and update match data.</p>
                         </header>
 
                         <div className="bg-white dark:bg-zinc-900/80 p-8 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
@@ -147,30 +120,30 @@ export default function Admin() {
                             <form onSubmit={handleCreateMatch} className="space-y-4">
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <div className="flex flex-col gap-1">
-                                        <label className="text-sm font-semibold">Team 1</label>
+                                        <label className="text-sm font-semibold">Player 1</label>
                                         <select
                                             required
                                             className="px-3 py-2 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-                                            value={team1}
-                                            onChange={e => setTeam1(e.target.value)}
+                                            value={player1}
+                                            onChange={e => setPlayer1(e.target.value)}
                                         >
-                                            <option value="">-- Select Team 1 --</option>
-                                            {teams.map(team => (
-                                                <option key={team.id} value={team.id}>{teamName(team)} ({team.Username})</option>
+                                            <option value="">-- Select Player 1 --</option>
+                                            {accounts.map(acc => (
+                                                <option key={acc.username} value={acc.username}>{acc.username}</option>
                                             ))}
                                         </select>
                                     </div>
                                     <div className="flex flex-col gap-1">
-                                        <label className="text-sm font-semibold">Team 2</label>
+                                        <label className="text-sm font-semibold">Player 2</label>
                                         <select
                                             required
                                             className="px-3 py-2 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-                                            value={team2}
-                                            onChange={e => setTeam2(e.target.value)}
+                                            value={player2}
+                                            onChange={e => setPlayer2(e.target.value)}
                                         >
-                                            <option value="">-- Select Team 2 --</option>
-                                            {teams.map(team => (
-                                                <option key={team.id} value={team.id}>{teamName(team)} ({team.Username})</option>
+                                            <option value="">-- Select Player 2 --</option>
+                                            {accounts.map(acc => (
+                                                <option key={acc.username} value={acc.username}>{acc.username}</option>
                                             ))}
                                         </select>
                                     </div>
@@ -220,7 +193,7 @@ export default function Admin() {
                                         <option value="">-- Select a match --</option>
                                         {matches.map(m => (
                                             <option key={m.match_id} value={m.match_id}>
-                                                ID: {m.match_id} | {matchTeam1Name(m)} vs {matchTeam2Name(m)} ({new Date(m.week).toLocaleDateString()}) {m.done ? '[Done]' : ''}
+                                                ID: {m.match_id} | {m.player1} vs {m.player2} ({new Date(m.week).toLocaleDateString()}) {m.done ? '[Done]' : ''}
                                             </option>
                                         ))}
                                     </select>
