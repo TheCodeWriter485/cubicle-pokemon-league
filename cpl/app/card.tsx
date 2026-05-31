@@ -3,8 +3,6 @@ import { useState, useEffect, useRef } from 'react';
 import Button from 'react-bootstrap/Button';
 import Overlay from 'react-bootstrap/Overlay';
 import Popover from 'react-bootstrap/Popover';
-import Box from 'react-bootstrap/Card';
-
 export default function Card(props: { name: string, value: number, image: number, ownedByOverride?: string | null }) {
     const [showPurchase, setShowPurchase] = useState(false);
     const [loggedIn, setLoggedIn] = useState(false);
@@ -222,7 +220,7 @@ export default function Card(props: { name: string, value: number, image: number
 
                         <hr style={{ borderColor: '#e3d109' }} />
                         <div className="d-flex justify-content-center gap-2">
-                            <Button variant="success" size="sm" onClick={handlePurchase}>Buy</Button><br></br>
+                            <Button variant="success" size="sm" onClick={handlePurchase}>Buy</Button>
                             <Button variant="secondary" size="sm" onClick={handlePurchaseClose}>Cancel</Button>
                         </div>
                     </Popover.Body>
