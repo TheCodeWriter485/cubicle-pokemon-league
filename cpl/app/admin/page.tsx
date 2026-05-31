@@ -249,8 +249,6 @@ export default function Admin() {
                                 </div>
                             )}
                         </div>
-                                        <div className="h-10"></div>
-                        <DraftForm />
                     </div> :
                     (!loggedIn ? (
                         <div className="flex flex-col items-center justify-center h-[50vh] text-center">
