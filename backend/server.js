@@ -276,14 +276,6 @@ app.get('/itemshop', (req, res) => {
     })
 })
 
-app.get('/matches', (req, res) => {
-    const sql = "SELECT * FROM matches";
-    db.query(sql, (err, data) => {
-        if (err) return res.json(err);
-        return res.json(data);
-    });
-});
-
 app.post('/auth', (req, res) => {
     // Capture the input fields
     let username = req.body.username;
