@@ -3,8 +3,6 @@ import { useState, useEffect, useRef } from 'react';
 import Button from 'react-bootstrap/Button';
 import Overlay from 'react-bootstrap/Overlay';
 import Popover from 'react-bootstrap/Popover';
-import Box from 'react-bootstrap/Card';
-
 export default function Card(props: { name: string, value: number, image: number, ownedByOverride?: string | null }) {
     const [showPurchase, setShowPurchase] = useState(false);
     const [loggedIn, setLoggedIn] = useState(false);
@@ -168,33 +166,6 @@ export default function Card(props: { name: string, value: number, image: number
                             alt={props.name}
                             style={{ width: '80px', height: '80px', objectFit: 'contain' }}
                         />
-        <Box style={{ width: '18rem' }}>
-        <Box.Img
-            variant="top"
-            src={"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/"+ props.image +".png"}
-            loading="lazy"
-            style={{ filter: ownedBy ? 'grayscale(100%)' : 'none', opacity: ownedBy ? 0.5 : 1 }}
-        />
-            <Box.Body>
-                <Button variant="primary" style={{ marginRight: '8px' }} onClick={handleShow}>{props.name}</Button>
-
-                {/* Buy button disabled if pokemon is already owned */}
-                <Button
-                    ref={buyButtonRef}
-                    variant={ownedBy ? "secondary" : "success"}
-                    onClick={handlePurchaseShow}
-                    disabled={!!ownedBy}
-                    title={ownedBy ? `Owned by ${ownedBy}` : "Buy this Pokémon"}
-                >
-                    {ownedBy ? `Owned by ${ownedBy}` : "Buy"}
-                </Button>
-            </Box.Body>
-
-            <Overlay target={buyButtonRef.current} show={showPurchase} placement="top" rootClose onHide={handlePurchaseClose}>
-                <Popover style={{ backgroundColor: '#000000', border: '1px solid #e3d109', maxWidth: '300px', zIndex: 9999 }}>
-                    <Popover.Header as="h3" className="text-center">Purchase {props.name}?</Popover.Header>
-                    <Popover.Body className="text-center">
-                        <img variant="top"  src={"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/"+ props.image +".png"} />
                         <p><strong>Price:</strong> {props.value} points</p>
 
                         {pokeStats ? (
@@ -218,7 +189,7 @@ export default function Card(props: { name: string, value: number, image: number
 
                         <hr style={{ borderColor: '#e3d109' }} />
                         <div className="d-flex justify-content-center gap-2">
-                            <Button variant="success" size="sm" onClick={handlePurchase}>Buy</Button><br></br>
+                            <Button variant="success" size="sm" onClick={handlePurchase}>Buy</Button>
                             <Button variant="secondary" size="sm" onClick={handlePurchaseClose}>Cancel</Button>
                         </div>
                     </Popover.Body>

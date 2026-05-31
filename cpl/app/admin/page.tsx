@@ -36,7 +36,9 @@ export default function Admin() {
     const [week, setWeek] = useState("")
 
     async function checkLogin() {
-        const response = await fetch("http://localhost:3030/auth/status", { credentials: "include" })
+        const response = await fetch("http://localhost:3030/auth/status", {
+            credentials: "include"
+        })
         const data = await response.json()
         setLoggedIn(data.loggedin)
         setIsAdmin(data.admin)
@@ -128,18 +130,6 @@ export default function Admin() {
             <SideBar bookmarks={bookmarks} />
             <div className="window flex-1 p-8 md:p-12 overflow-y-auto w-full max-w-5xl mx-auto">
                 {loggedIn && isAdmin ?
-                    <>
-                        <h1>Admin Panel 🛠️</h1>
-                        <AccountForm />
-                        <div className="h-10"></div>
-                        <MatchForm />
-                        <div className="h-10"></div>
-                        <DraftForm />
-                    </> :
-                    (!loggedIn ? (
-                        <h1>Please log in to access the admin page 🔐</h1>
-                    ) : (
-                        <h1>You do not have access to the admin page 🚫</h1>
                     <div className="space-y-12">
                         <header>
                             <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-teal-500 to-blue-500 bg-clip-text text-transparent mb-4">
@@ -272,6 +262,8 @@ export default function Admin() {
                         </div>
                     ))
                 }
+                <div className="h-10"></div>
+                        <DraftForm />
             </div>
         </main>
     );
