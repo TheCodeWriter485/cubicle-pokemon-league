@@ -3,6 +3,7 @@ import SideBar from "../sidebar";
 import MatchForm from '@/app/match_form'
 import AccountForm from '@/app/admin/account_form'
 import DraftForm from '@/app/admin/draft_form'
+import TeamForm from '@/app/admin/team_form'
 import { useState, useEffect } from 'react'
 
 type Team = {
@@ -30,7 +31,6 @@ export default function Admin() {
     const [teams, setTeams] = useState<Team[]>([])
     const [selectedMatchId, setSelectedMatchId] = useState<string>("")
 
-    // Create match state
     const [team1, setTeam1] = useState("")
     const [team2, setTeam2] = useState("")
     const [week, setWeek] = useState("")
@@ -68,7 +68,6 @@ export default function Admin() {
                 fetchTeams()
             ])
         }
-
         loadInitialData()
     }, [])
 
@@ -100,7 +99,6 @@ export default function Admin() {
     const handleDeleteMatch = async () => {
         if (!selectedMatchId) return;
         if (!confirm("Are you sure you want to delete this match?")) return;
-        
         try {
             const res = await fetch(`http://localhost:3030/matches/delete/${selectedMatchId}`, {
                 method: "DELETE"
@@ -193,11 +191,9 @@ export default function Admin() {
                                                 const day = dateObj.getDay();
                                                 const diff = dateObj.getDate() - day + (day === 0 ? -6 : 1);
                                                 dateObj.setDate(diff);
-
                                                 const year = dateObj.getFullYear();
                                                 const month = String(dateObj.getMonth() + 1).padStart(2, '0');
                                                 const dateStr = String(dateObj.getDate()).padStart(2, '0');
-
                                                 setWeek(`${year}-${month}-${dateStr}`);
                                             }}
                                         />
@@ -249,6 +245,19 @@ export default function Admin() {
                                 </div>
                             )}
                         </div>
+
+                        {/* Draft Schedule */}
+                        <div className="bg-white dark:bg-zinc-900/80 p-8 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+                            <h2 className="text-2xl font-bold mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-2">Draft Schedule</h2>
+                            <DraftForm />
+                        </div>
+
+                        {/* Create New Team */}
+                        <div className="bg-white dark:bg-zinc-900/80 p-8 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+                            <h2 className="text-2xl font-bold mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-2">Create New Team</h2>
+                            <TeamForm />
+                        </div>
+
                     </div> :
                     (!loggedIn ? (
                         <div className="flex flex-col items-center justify-center h-[50vh] text-center">
@@ -261,7 +270,7 @@ export default function Admin() {
                             <p className="text-zinc-500">You do not have administrative privileges.</p>
                         </div>
                     ))
-                } 
+                }
             </div>
         </main>
     );
