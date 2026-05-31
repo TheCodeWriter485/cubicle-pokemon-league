@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import Button from 'react-bootstrap/Button';
 import Overlay from 'react-bootstrap/Overlay';
 import Popover from 'react-bootstrap/Popover';
-export default function Card(props: { name: string, value: number, image: number, ownedByOverride?: string | null }) {
+export default function Card(props: { name: string, value: number, image: number, ownedByOverride?: string | null, onImageLoad?: () => void }) {
     const [showPurchase, setShowPurchase] = useState(false);
     const [loggedIn, setLoggedIn] = useState(false);
     const [username, setUsername] = useState("");
@@ -139,13 +139,11 @@ export default function Card(props: { name: string, value: number, image: number
     return (
         <div ref={cardRef} onClick={handlePurchaseShow} style={{ cursor: ownedBy ? 'default' : 'pointer' }}>
             <img
+                
                 src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${props.image}.png`}
-                alt={props.name}
-                loading="lazy"
+                
+                onLoad={props.onImageLoad}
                 style={{
-                    width: '96px',
-                    height: '96px',
-                    objectFit: 'contain',
                     filter: ownedBy ? 'grayscale(100%)' : 'none',
                     opacity: ownedBy ? 0.5 : 1
                 }}

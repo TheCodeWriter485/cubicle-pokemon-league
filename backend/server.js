@@ -218,6 +218,18 @@ app.get('/team/full', (req, res) => {
     });
 });
 
+app.post('/team/create', (req, res) => {
+    const { Username, League, TeamName, Logo, Epithat, TrainerTip, Season, Wins, Losses, KO, Dif, ELO, Points } = req.body;
+    db.query(
+        'INSERT INTO team (Username, League, TeamName, Logo, Epithat, TrainerTip, Season, Wins, Losses, KO, Dif, Elo, Points) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [Username, League, TeamName, Logo, Epithat, TrainerTip, Season, Wins, Losses, KO, Dif, ELO, Points],
+        (err, results) => {
+            if (err) return res.json(err);
+            return res.json(results);
+        }
+    );
+});
+
 app.post('/team/updatepoints', (req, res) => {
     let username = req.body.username;
     let points = req.body.points;
