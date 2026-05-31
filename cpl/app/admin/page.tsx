@@ -1,5 +1,6 @@
 "use client"
 import SideBar from "../sidebar";
+import TierForm from '@/app/admin/tier_form'
 import MatchForm from '@/app/match_form'
 import AccountForm from '@/app/admin/account_form'
 import DraftForm from '@/app/admin/draft_form'
@@ -258,8 +259,15 @@ export default function Admin() {
                             <h2 className="text-2xl font-bold mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-2">Create New Team</h2>
                             <TeamForm />
                         </div>
-
-                    </div> :
+                        
+                        <div className="bg-white dark:bg-zinc-900/80 p-8 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+    <h2 className="text-2xl font-bold mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-2">
+        Update Tier List
+    </h2>
+    <TierForm />
+</div>
+                    </div> 
+                    :
                     (!loggedIn ? (
                         <div className="flex flex-col items-center justify-center h-[50vh] text-center">
                             <h1 className="text-3xl font-bold mb-2">Please log in to access the admin page 🔐</h1>

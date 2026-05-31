@@ -3,8 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import Button from 'react-bootstrap/Button';
 import Overlay from 'react-bootstrap/Overlay';
 import Popover from 'react-bootstrap/Popover';
-export default function Card(props: { name: string, value: number, image: number, ownedByOverride?: string | null, onImageLoad?: () => void }) {
-    const [showPurchase, setShowPurchase] = useState(false);
+export default function Card(props: { name: string, value: number, image: number, ownedByOverride?: string | null, tradingAllowed?: boolean }) {    const [showPurchase, setShowPurchase] = useState(false);
     const [loggedIn, setLoggedIn] = useState(false);
     const [username, setUsername] = useState("");
     const [pokeStats, setPokeStats] = useState<any>(null);
@@ -20,6 +19,10 @@ export default function Card(props: { name: string, value: number, image: number
 
     const handlePurchaseClose = () => setShowPurchase(false);
     const handlePurchaseShow = () => {
+        if (!props.tradingAllowed) {
+            alert("Purchasing is only available on draft day or Sundays.");
+            return;
+        }
         if (!ownedBy) {
             setShowPurchase(true);
             fetchPokeData();
@@ -80,61 +83,107 @@ export default function Card(props: { name: string, value: number, image: number
             return;
         }
 
-        const membersRes = await fetch("http://localhost:3030/team/full");
-        const fullTeams = await membersRes.json();
-        const userFullTeam = fullTeams.find((team: any) => team.Username === username);
-
-        if (userFullTeam && userFullTeam.members.length >= 10) {
-            alert("You already have 10 Pokémon on your team and cannot purchase more.");
+        // Trades check
+        if (userTeam.trades < 1) {
+            alert("You have no more trades for the season!");
             handlePurchaseClose();
             return;
         }
 
-        if (Number(userTeam.Points) - Number(props.value) < 0) {
-            alert("You don't have enough points to purchase this Pokemon.");
+    // Sunday check — block if last week's match is incomplete
+    const now = new Date();
+    const isSunday = now.getDay() === 0;
+
+    if (isSunday) {
+        const matchRes = await fetch(`http://localhost:3030/matches/team/${userTeam.id}`);
+        const matchData = await matchRes.json();
+
+        // Find last week's date range
+        const lastMonday = new Date(now);
+        lastMonday.setDate(now.getDate() - 6); // last Monday
+        lastMonday.setHours(0, 0, 0, 0);
+
+        const lastSunday = new Date(now);
+        lastSunday.setDate(now.getDate() - 1); // yesterday (Saturday)
+        lastSunday.setHours(23, 59, 59, 999);
+
+        const incompleteLastWeek = matchData.find((m: any) => {
+            const matchDate = new Date(m.week);
+            return matchDate >= lastMonday && matchDate <= lastSunday && !m.done;
+        });
+
+        if (incompleteLastWeek) {
+            alert("You cannot trade on Sunday until your match from last week has been completed.");
             handlePurchaseClose();
             return;
         }
+    }
 
-        const purchaseResponse = await fetch("http://localhost:3030/teammates/create", {
+    const membersRes = await fetch("http://localhost:3030/team/full");
+    const fullTeams = await membersRes.json();
+    const userFullTeam = fullTeams.find((team: any) => team.Username === username);
+
+    if (userFullTeam && userFullTeam.members.length >= 10) {
+        alert("You already have 10 Pokémon on your team and cannot purchase more.");
+        handlePurchaseClose();
+        return;
+    }
+
+    if (Number(userTeam.Points) - Number(props.value) < 0) {
+        alert("You don't have enough points to purchase this Pokemon.");
+        handlePurchaseClose();
+        return;
+    }
+
+    const purchaseResponse = await fetch("http://localhost:3030/teammates/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            team_id: userTeam.id,
+            pokemon: props.name
+        })
+    });
+
+    const result = await purchaseResponse.json();
+
+    if (purchaseResponse.ok) {
+        await fetch("http://localhost:3030/team/updatepoints", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                team_id: userTeam.id,
-                pokemon: props.name
+                username: username,
+                points: Number(userTeam.Points) - Number(props.value)
             })
         });
 
-        const result = await purchaseResponse.json();
+        await fetch("http://localhost:3030/pokemon/claim", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                username: username,
+                pokemonName: props.name
+            })
+        });
 
-        if (purchaseResponse.ok) {
-            await fetch("http://localhost:3030/team/updatepoints", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    username: username,
-                    points: Number(userTeam.Points) - Number(props.value)
-                })
-            });
+        // Deduct one trade
+        await fetch("http://localhost:3030/team/updatetrades", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                username: username,
+                trades: Number(userTeam.trades) - 1
+            })
+        });
 
-            await fetch("http://localhost:3030/pokemon/claim", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    username: username,
-                    pokemonName: props.name
-                })
-            });
-
-            setOwnedBy(username);
-            alert(`${props.name} purchased successfully!`);
-        } else {
-            alert("Something went wrong with the purchase.");
-            console.error(result);
-        }
-
-        handlePurchaseClose();
+        setOwnedBy(username);
+        alert(`${props.name} purchased successfully! Trades remaining: ${Number(userTeam.trades) - 1}`);
+    } else {
+        alert("Something went wrong with the purchase.");
+        console.error(result);
     }
+
+    handlePurchaseClose();
+}
 
     return (
         <div ref={cardRef} onClick={handlePurchaseShow} style={{ cursor: ownedBy ? 'default' : 'pointer' }}>
@@ -142,7 +191,6 @@ export default function Card(props: { name: string, value: number, image: number
                 
                 src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${props.image}.png`}
                 
-                onLoad={props.onImageLoad}
                 style={{
                     filter: ownedBy ? 'grayscale(100%)' : 'none',
                     opacity: ownedBy ? 0.5 : 1

@@ -3,6 +3,17 @@ import { useEffect, useState } from 'react'
 import SideBar from "../sidebar";
 import Card from "../card";
 
+function isTradingAllowed(schedule: any[]): boolean {
+    const now = new Date();
+    const day = now.getDay(); // 0 = Sunday
+
+    // Always allow on Sundays
+    if (day === 0) return true;
+
+    // Allow during draft window
+    return isDraftActive(schedule);
+}
+
 function isDraftActive(schedule: any[]): boolean {
     if (!schedule || schedule.length === 0) return false;
 
@@ -23,35 +34,35 @@ export default function TierList() {
     const [ownership, setOwnership] = useState<Record<string, string | null>>({});
     const [draftSchedule, setDraftSchedule] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [imagesLoaded, setImagesLoaded] = useState(0);
-    const [totalImages, setTotalImages] = useState(0);
+    const [tradingAllowed, setTradingAllowed] = useState(false);
 
-    async function fetchPokemon() {
-        const res = await fetch('http://localhost:3030/pokedata');
-        const data = await res.json();
+async function fetchPokemon() {
+    const res = await fetch('http://localhost:3030/pokedata');
+    const data = await res.json();
 
-        let arr: any[][] = Array.from({ length: 21 }, () => []);
-        let count = 0;
-        data.forEach((poke: any) => {
-            if (poke.PointValue <= 20) {
-                arr[poke.PointValue].push(poke);
-                count++;
-            }
-        });
-        setPokemon(arr);
-        setTotalImages(count);
+    let arr: any[][] = Array.from({ length: 21 }, () => []);
+    data.forEach((poke: any) => {
+        if (poke.PointValue <= 20) {
+            arr[poke.PointValue].push(poke);
+        }
+    });
+    setPokemon(arr);
 
-        const ownerMap: Record<string, string | null> = {};
-        data.forEach((poke: any) => {
-            ownerMap[poke.NamePoke] = poke.OwnedBy ?? null;
-        });
-        setOwnership(ownerMap);
-    }
+    const ownerMap: Record<string, string | null> = {};
+    data.forEach((poke: any) => {
+        ownerMap[poke.NamePoke] = poke.OwnedBy ?? null;
+    });
+    setOwnership(ownerMap);
+
+    // Hide loading screen once data is ready
+    setLoading(false);
+}
 
     async function fetchSchedule() {
         const res = await fetch('http://localhost:3030/draft/schedule');
         const data = await res.json();
         setDraftSchedule(data);
+        setTradingAllowed(isTradingAllowed(data));
     }
 
     useEffect(() => {
@@ -71,17 +82,6 @@ export default function TierList() {
 
         return () => clearInterval(interval);
     }, [draftSchedule]);
-
-    // Hide loading screen once all images have loaded
-    useEffect(() => {
-        if (totalImages > 0 && imagesLoaded >= totalImages) {
-            setLoading(false);
-        }
-    }, [imagesLoaded, totalImages]);
-
-    const handleImageLoad = () => {
-        setImagesLoaded(prev => prev + 1);
-    };
 
     const bookmarks = [{ id: 1, name: 'button' }]
     const reversedTiers = [...pokemon].reverse();
@@ -124,11 +124,6 @@ export default function TierList() {
                         }}>
                             Loading...
                         </p>
-                        {totalImages > 0 && (
-                            <p style={{ color: '#aaa', fontSize: '0.9rem' }}>
-                                {imagesLoaded} / {totalImages} Pokémon loaded
-                            </p>
-                        )}
                         <style>{`
                             @keyframes spin {
                                 from { transform: rotate(0deg); }
@@ -155,7 +150,7 @@ export default function TierList() {
                                                 value={poke.PointValue}
                                                 image={poke.ID}
                                                 ownedByOverride={ownership[poke.NamePoke]}
-                                                onImageLoad={handleImageLoad}
+                                                tradingAllowed={tradingAllowed}
                                             />
                                         </div>
                                     ))

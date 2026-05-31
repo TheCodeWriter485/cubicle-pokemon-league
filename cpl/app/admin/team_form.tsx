@@ -15,7 +15,8 @@ export default function TeamForm() {
         KO: 0,
         Dif: 0,
         ELO: 1000,
-        Points: 100
+        Points: 100,
+        trades: 20
     });
     const [saved, setSaved] = useState(false);
     const [error, setError] = useState('');
@@ -52,7 +53,8 @@ export default function TeamForm() {
                     KO: 0,
                     Dif: 0,
                     ELO: 1000,
-                    Points: 100
+                    Points: 100,
+                    trades: 20
                 });
             }
         } catch (err) {

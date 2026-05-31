@@ -9,6 +9,12 @@ const bcrypt = require('bcrypt')
 const app = express()
 const session = require('express-session')
 
+const multer = require('multer');
+const fs = require('fs');
+const path = require('path');
+
+const upload = multer({ storage: multer.memoryStorage() });
+
 app.use(cors({
     origin: 'http://localhost:3000', // your frontend
     credentials: true
@@ -223,10 +229,10 @@ app.get('/team/full', (req, res) => {
 });
 
 app.post('/team/create', (req, res) => {
-    const { Username, League, TeamName, Logo, Epithat, TrainerTip, Season, Wins, Losses, KO, Dif, ELO, Points } = req.body;
+    const { Username, League, TeamName, Logo, Epithat, TrainerTip, Season, Wins, Losses, KO, Dif, ELO, Points, trades } = req.body;
     db.query(
-        'INSERT INTO team (Username, League, TeamName, Logo, Epithat, TrainerTip, Season, Wins, Losses, KO, Dif, Elo, Points) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-        [Username, League, TeamName, Logo, Epithat, TrainerTip, Season, Wins, Losses, KO, Dif, ELO, Points],
+        'INSERT INTO team (Username, League, TeamName, Logo, Epithat, TrainerTip, Season, Wins, Losses, KO, Dif, Elo, Points, trades) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [Username, League, TeamName, Logo, Epithat, TrainerTip, Season, Wins, Losses, KO, Dif, ELO, Points, trades],
         (err, results) => {
             if (err) return res.json(err);
             return res.json(results);
@@ -241,6 +247,23 @@ app.post('/team/updatepoints', (req, res) => {
     db.query('UPDATE team SET Points = ? WHERE Username = ?', [points, username], (err, results) => {
         if (err) return res.json(err);
         return res.json(results);
+    });
+});
+
+app.post('/team/updatetrades', (req, res) => {
+    let username = req.body.username;
+    let trades = req.body.trades;
+
+    db.query('UPDATE team SET trades = ? WHERE Username = ?', [trades, username], (err, results) => {
+        if (err) return res.json(err);
+        return res.json(results);
+    });
+});
+
+app.get('/matches/team/:team_id', (req, res) => {
+    db.query('SELECT * FROM matches WHERE team_1 = ? OR team_2 = ?', [req.params.team_id, req.params.team_id], (err, data) => {
+        if (err) return res.json(err);
+        return res.json(data);
     });
 });
 
@@ -535,6 +558,88 @@ app.delete("/matches/delete/:id", (req, res) => {
     })
 })
 
+app.post('/admin/tierlist/update', upload.single('csv'), (req, res) => {
+    try {
+        const csvContent = req.file.buffer.toString('utf-8');
+
+        // Parse uploaded CSV
+        const lines = csvContent.split('\n').filter(l => l.trim());
+        const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+        const pokemonIndex = headers.indexOf('pokemon');
+        const pointIndex = headers.indexOf('point');
+
+        if (pokemonIndex === -1 || pointIndex === -1) {
+            return res.status(400).json({ error: 'CSV must have "pokemon" and "point" columns.' });
+        }
+
+        const newPointValues = {};
+        for (let i = 1; i < lines.length; i++) {
+            const cols = lines[i].split(',');
+            const name = cols[pokemonIndex]?.trim();
+            const point = parseInt(cols[pointIndex]?.trim());
+            if (name && !isNaN(point)) {
+                newPointValues[name] = point;
+            }
+        }
+
+        // Step 1: Export current pokemon data to CSV
+        db.query('SELECT NamePoke, OwnedBy, Favorited, PointValue, Score, Diff, Kills, Death, Wins, GamesPlayed FROM Pokemon', (err, rows) => {
+            if (err) return res.json(err);
+
+            const year = new Date().getFullYear();
+            const csvHeader = 'NamePoke,OwnedBy,Favorited,PointValue,Score,Diff,Kills,Death,Wins,GamesPlayed\n';
+            const csvRows = rows.map(r =>
+                `${r.NamePoke ?? ''},${r.OwnedBy ?? ''},${r.Favorited ?? ''},${r.PointValue ?? ''},${r.Score ?? ''},${r.Diff ?? ''},${r.Kills ?? ''},${r.Death ?? ''},${r.Wins ?? ''},${r.GamesPlayed ?? ''}`
+            ).join('\n');
+
+            const csvPath = path.join(__dirname, '..', 'cpl', 'app', 'tier-list', `${year}tierlist.csv`);
+            fs.writeFileSync(csvPath, csvHeader + csvRows);
+
+            // Step 2: Update historical stats and reset season stats
+            db.query(`
+                UPDATE Pokemon SET
+                    HistDiff   = COALESCE(HistDiff, 0)  + COALESCE(Diff, 0),
+                    HistKills  = COALESCE(HistKills, 0) + COALESCE(Kills, 0),
+                    HistDeath  = COALESCE(HistDeath, 0) + COALESCE(Death, 0),
+                    HistWins   = COALESCE(HistWins, 0)  + COALESCE(Wins, 0),
+                    HistGP     = COALESCE(HistGP, 0)    + COALESCE(GamesPlayed, 0),
+                    TimesDrafted = COALESCE(TimesDrafted, 0) + CASE WHEN OwnedBy IS NOT NULL THEN 1 ELSE 0 END,
+                    Diff        = NULL,
+                    Kills       = NULL,
+                    Death       = NULL,
+                    Wins        = NULL,
+                    GamesPlayed = NULL,
+                    OwnedBy     = NULL
+            `, (err2) => {
+                if (err2) return res.json(err2);
+
+                // Step 3: Set all pokemon to banned (21) first
+                db.query('UPDATE Pokemon SET PointValue = 21', (err3) => {
+                    if (err3) return res.json(err3);
+
+                    // Then update only the ones in the new CSV
+                    const entries = Object.entries(newPointValues);
+                    if (entries.length === 0) return res.json({ success: true, updated: 0 });
+
+                    let completed = 0;
+                    let errors = 0;
+                    entries.forEach(([name, point]) => {
+                        db.query('UPDATE Pokemon SET PointValue = ? WHERE NamePoke = ?', [point, name], (err4) => {
+                            if (err4) errors++;
+                            completed++;
+                            if (completed === entries.length) {
+                                return res.json({ success: true, updated: completed - errors, errors });
+                            }
+                        });
+                    });
+                });
+            });
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to process tier list update.' });
+    }
+});
 
 app.listen(3030, () => {
     console.log("listening");
