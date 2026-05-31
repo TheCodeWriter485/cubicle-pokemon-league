@@ -376,11 +376,13 @@ app.get("/matches", (req, res) => {
             team1.League AS team_1_league,
             team1.TeamName AS team_1_name,
             team1.Logo AS team_1_logo,
+            team1.showdown_acct AS team_1_showdown_acct,
             team2.id AS team_2_id,
             team2.Username AS team_2_username,
             team2.League AS team_2_league,
             team2.TeamName AS team_2_name,
-            team2.Logo AS team_2_logo
+            team2.Logo AS team_2_logo,
+            team2.showdown_acct AS team_2_showdown_acct
         FROM matches
         LEFT JOIN team AS team1 ON matches.team_1 = team1.id
         LEFT JOIN team AS team2 ON matches.team_2 = team2.id
@@ -403,28 +405,84 @@ function parseStoredMatchData(matchData) {
     }
 }
 
+function validateSubmittedMatchData(matchRow, matchData, replayUrls) {
+    if (!matchRow) return "Match not found";
+
+    const rounds = Array.isArray(matchData?.round_data) ? matchData.round_data : [];
+    if (rounds.length < 2) return "At least two rounds are required";
+    if (!matchData?.match_winner) return "Match data must include a winner";
+    if (!replayUrls[0] || !replayUrls[1]) return "Round 1 and Round 2 replay URLs are required";
+
+    const team1Name = matchRow.team_1_name || `Team ${matchRow.team_1}`;
+    const team2Name = matchRow.team_2_name || `Team ${matchRow.team_2}`;
+    const team1Wins = Number(matchData?.p1?.round_wins) || rounds.filter((round) => round?.p1?.winner).length;
+    const team2Wins = Number(matchData?.p2?.round_wins) || rounds.filter((round) => round?.p2?.winner).length;
+
+    if (matchData?.p1?.name !== team1Name) return `Match data p1 must be ${team1Name}`;
+    if (matchData?.p2?.name !== team2Name) return `Match data p2 must be ${team2Name}`;
+    if (team1Wins === team2Wins) return "Match data must have a winner";
+    if (Math.max(team1Wins, team2Wins) < 2) return "A team must win at least two rounds";
+
+    for (const [index, round] of rounds.entries()) {
+        if (!round?.id) return `Round ${index + 1} is missing a replay id`;
+        if (!replayUrls[index]) return `Round ${index + 1} is missing a replay URL`;
+        if (round?.source_url && round.source_url !== replayUrls[index]) return `Round ${index + 1} replay URL does not match loaded round data`;
+        if (round?.p1?.name !== team1Name) return `Round ${index + 1} p1 must be ${team1Name}`;
+        if (round?.p2?.name !== team2Name) return `Round ${index + 1} p2 must be ${team2Name}`;
+        if (!round?.p1?.winner && !round?.p2?.winner) return `Round ${index + 1} must have a winner`;
+        if (round?.p1?.winner && round?.p2?.winner) return `Round ${index + 1} cannot have two winners`;
+    }
+
+    if (![team1Name, team2Name].includes(matchData.match_winner)) {
+        return "Match winner must be one of the teams in this match";
+    }
+
+    return null;
+}
+
 app.post("/matches/update", async (req, res) => {
     const match_id = req.body.match_id;
     const match_data = req.body.match_data;
-    const winner = req.body.winner;
+    const round1_url = req.body.round1_url || null;
+    const round2_url = req.body.round2_url || null;
+    const round3_url = req.body.round3_url || null;
     const done = 1;
-    const sql = "UPDATE matches SET match_data = ?, done = ?, winner = ? WHERE match_id = ?";
+    const sql = "UPDATE matches SET match_data = ?, done = ?, winner = ?, round1_url = ?, round2_url = ?, round3_url = ? WHERE match_id = ?";
 
     try {
         await dbPromise.beginTransaction();
 
-        const [matches] = await dbPromise.query("SELECT * FROM matches WHERE match_id = ? FOR UPDATE", [match_id]);
+        const [matches] = await dbPromise.query(`
+            SELECT
+                matches.*,
+                team1.TeamName AS team_1_name,
+                team1.showdown_acct AS team_1_showdown_acct,
+                team2.TeamName AS team_2_name,
+                team2.showdown_acct AS team_2_showdown_acct
+            FROM matches
+            LEFT JOIN team AS team1 ON matches.team_1 = team1.id
+            LEFT JOIN team AS team2 ON matches.team_2 = team2.id
+            WHERE matches.match_id = ?
+            FOR UPDATE
+        `, [match_id]);
         if (!matches.length) {
             await dbPromise.rollback();
             return res.status(404).json({ error: "Match not found" });
         }
 
         const matchRow = matches[0];
+        const validationError = validateSubmittedMatchData(matchRow, match_data, [round1_url, round2_url, round3_url]);
+        if (validationError) {
+            await dbPromise.rollback();
+            return res.status(400).json({ error: validationError });
+        }
+
         const previousMatchData = parseStoredMatchData(matchRow.match_data);
         const matchDataToStore = {
             ...(match_data || {}),
             stats_applied: true
         };
+        const winner = matchDataToStore.match_winner;
 
         if (matchRow.done && previousMatchData?.stats_applied) {
             await applyMatchStatDelta(matchRow, getMatchStatTotals(previousMatchData), -1);
@@ -432,7 +490,7 @@ app.post("/matches/update", async (req, res) => {
 
         await applyMatchStatDelta(matchRow, getMatchStatTotals(match_data), 1);
 
-        const [data] = await dbPromise.query(sql, [JSON.stringify(matchDataToStore), done, winner, match_id]);
+        const [data] = await dbPromise.query(sql, [JSON.stringify(matchDataToStore), done, winner, round1_url, round2_url, round3_url, match_id]);
         await dbPromise.commit();
 
         return res.json(data);

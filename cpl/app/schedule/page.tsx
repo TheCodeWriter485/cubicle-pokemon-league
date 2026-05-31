@@ -2,11 +2,13 @@
 import SideBar from "../sidebar";
 import { useEffect, useState } from "react";
 import MatchForm from "../match_form";
+import MatchStatsModal from "../match_stats_modal";
 
 type Team = {
     id: number | string
     Username?: string
     TeamName?: string
+    showdown_acct?: string
 }
 
 type RoundPlayer = {
@@ -52,6 +54,11 @@ type Match = {
     team_2_name?: string
     team_1_username?: string
     team_2_username?: string
+    team_1_showdown_acct?: string
+    team_2_showdown_acct?: string
+    round1_url?: string | null
+    round2_url?: string | null
+    round3_url?: string | null
     match_data?: MatchData | string | null
 }
 
@@ -67,8 +74,8 @@ const parseStoredMatchData = (matchData: Match["match_data"]): MatchData | null 
     }
 }
 
-const sumRoundValue = (rounds: RoundData[], side: "p1" | "p2", key: "kills" | "diff") => {
-    return rounds.reduce((total, round) => total + (Number(round?.[side]?.[key]) || 0), 0);
+const toShowdownId = (value?: string | null) => {
+    return String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
 }
 
 export default function Schedule() {
@@ -128,16 +135,26 @@ export default function Schedule() {
         return joinedName || fallbackTeam?.TeamName || fallbackTeam?.Username || `Team ${teamId}`;
     }
 
+    const teamShowdownAcct = (match: Match, side: 1 | 2) => {
+        const joinedAcct = side === 1 ? match.team_1_showdown_acct : match.team_2_showdown_acct;
+        const teamId = side === 1 ? match.team_1 : match.team_2;
+        const fallbackTeam = teamById(teamId);
+
+        return joinedAcct || fallbackTeam?.showdown_acct || "";
+    }
+
     const winnerName = (match: Match) => {
         if (!match.winner) return "";
 
         const matchData = parseStoredMatchData(match.match_data);
         const winner = match.winner;
+        const winnerId = toShowdownId(winner);
 
         if (
             winner === match.team_1_username ||
             winner === match.team_1_name ||
-            winner === matchData?.p1?.name
+            winner === matchData?.p1?.name ||
+            winnerId === toShowdownId(teamShowdownAcct(match, 1))
         ) {
             return teamName(match, 1);
         }
@@ -145,7 +162,8 @@ export default function Schedule() {
         if (
             winner === match.team_2_username ||
             winner === match.team_2_name ||
-            winner === matchData?.p2?.name
+            winner === matchData?.p2?.name ||
+            winnerId === toShowdownId(teamShowdownAcct(match, 2))
         ) {
             return teamName(match, 2);
         }
@@ -161,129 +179,6 @@ export default function Schedule() {
         acc[weekDate].push(match);
         return acc;
     }, {} as Record<string, Match[]>);
-
-    const renderMatchStats = (match: Match) => {
-        const matchData = parseStoredMatchData(match.match_data);
-        const rounds = Array.isArray(matchData?.round_data) ? matchData.round_data : [];
-        const hasStats = rounds.length > 0;
-        const team1Wins = Number(matchData?.p1?.round_wins) || rounds.filter(round => round?.p1?.winner).length;
-        const team2Wins = Number(matchData?.p2?.round_wins) || rounds.filter(round => round?.p2?.winner).length;
-        const pokemonTotals = rounds.reduce((totals, round) => {
-            const pokemon = [
-                ...(round?.p1?.pokemon || []),
-                ...(round?.p2?.pokemon || [])
-            ];
-
-            pokemon.forEach(name => {
-                if (!totals[name]) {
-                    totals[name] = { kills: 0, deaths: 0 };
-                }
-                totals[name].kills += Number(round?.pokemon_kills?.[name]) || 0;
-                totals[name].deaths += Number(round?.pokemon_deaths?.[name]) || 0;
-            });
-
-            return totals;
-        }, {} as Record<string, { kills: number, deaths: number }>);
-
-        const sortedPokemonTotals = Object.entries(pokemonTotals)
-            .sort(([, a], [, b]) => b.kills - a.kills || a.deaths - b.deaths);
-
-        return (
-            <div className="space-y-6">
-                <div>
-                    <h2 className="text-2xl font-bold">
-                        {teamName(match, 1)} vs {teamName(match, 2)}
-                    </h2>
-                    <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-                        Week of {new Date(match.week).toLocaleDateString()}
-                    </p>
-                </div>
-
-                {!hasStats ? (
-                    <div className="rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700 p-8 text-center text-zinc-500 dark:text-zinc-400">
-                        No match stats have been recorded yet.
-                    </div>
-                ) : (
-                    <>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-4">
-                                <div className="text-sm text-zinc-500 dark:text-zinc-400">Rounds Won</div>
-                                <div className="mt-2 text-3xl font-bold">{team1Wins}</div>
-                                <div className="mt-1 text-sm font-medium">{teamName(match, 1)}</div>
-                            </div>
-                            <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-4">
-                                <div className="text-sm text-zinc-500 dark:text-zinc-400">Rounds Won</div>
-                                <div className="mt-2 text-3xl font-bold">{team2Wins}</div>
-                                <div className="mt-1 text-sm font-medium">{teamName(match, 2)}</div>
-                            </div>
-                            <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-4">
-                                <div className="text-sm text-zinc-500 dark:text-zinc-400">Total KO</div>
-                                <div className="mt-2 text-3xl font-bold">{sumRoundValue(rounds, "p1", "kills")}</div>
-                                <div className="mt-1 text-sm font-medium">{teamName(match, 1)}</div>
-                            </div>
-                            <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-4">
-                                <div className="text-sm text-zinc-500 dark:text-zinc-400">Total KO</div>
-                                <div className="mt-2 text-3xl font-bold">{sumRoundValue(rounds, "p2", "kills")}</div>
-                                <div className="mt-1 text-sm font-medium">{teamName(match, 2)}</div>
-                            </div>
-                        </div>
-
-                        <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800">
-                            <table className="w-full text-left">
-                                <thead className="bg-zinc-50 dark:bg-zinc-900">
-                                    <tr>
-                                        <th className="px-4 py-3 text-sm font-semibold">Round</th>
-                                        <th className="px-4 py-3 text-sm font-semibold">{teamName(match, 1)}</th>
-                                        <th className="px-4 py-3 text-sm font-semibold">{teamName(match, 2)}</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-                                    {rounds.map((round, index) => (
-                                        <tr key={round.id || index}>
-                                            <td className="px-4 py-3 text-sm font-medium">Round {index + 1}</td>
-                                            <td className="px-4 py-3 text-sm">
-                                                {round?.p1?.kills ?? 0} KO, {round?.p1?.diff ?? 0} diff
-                                                {round?.p1?.winner ? <span className="ml-2 text-amber-500 font-semibold"> (Winner)</span> : null}
-                                            </td>
-                                            <td className="px-4 py-3 text-sm">
-                                                {round?.p2?.kills ?? 0} KO, {round?.p2?.diff ?? 0} diff
-                                                {round?.p2?.winner ? <span className="ml-2 text-amber-500 font-semibold"> (Winner)</span> : null}
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-
-                        {sortedPokemonTotals.length > 0 && (
-                            <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800">
-                                <table className="w-full text-left">
-                                    <thead className="bg-zinc-50 dark:bg-zinc-900">
-                                        <tr>
-                                            <th className="px-4 py-3 text-sm font-semibold">Pokemon</th>
-                                            <th className="px-4 py-3 text-sm font-semibold">Kills</th>
-                                            <th className="px-4 py-3 text-sm font-semibold">Deaths</th>
-                                            <th className="px-4 py-3 text-sm font-semibold">Diff</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-                                        {sortedPokemonTotals.map(([pokemon, totals]) => (
-                                            <tr key={pokemon}>
-                                                <td className="px-4 py-3 text-sm font-medium">{pokemon}</td>
-                                                <td className="px-4 py-3 text-sm">{totals.kills}</td>
-                                                <td className="px-4 py-3 text-sm">{totals.deaths}</td>
-                                                <td className="px-4 py-3 text-sm">{totals.kills - totals.deaths}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
-                    </>
-                )}
-            </div>
-        );
-    }
 
     return (
         <main className="page flex min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100">
@@ -382,20 +277,7 @@ export default function Schedule() {
                 </div>
             </div>
 
-            {statsMatch && (
-                <div className="fixed inset-0 bg-zinc-900/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
-                    <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-8 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto relative shadow-2xl">
-                        <button
-                            type="button"
-                            aria-label="Close match stats"
-                            className="absolute top-6 right-6 p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors"
-                            onClick={() => setStatsMatch(null)}>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
-                        </button>
-                        {renderMatchStats(statsMatch)}
-                    </div>
-                </div>
-            )}
+            {statsMatch && <MatchStatsModal match={statsMatch} teams={teams} onClose={() => setStatsMatch(null)} />}
 
             {selectedMatch && (
                 <div className="fixed inset-0 bg-zinc-900/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
@@ -412,7 +294,7 @@ export default function Schedule() {
                             </h2>
                             <p className="text-sm text-zinc-500 mt-1">Week of {new Date(selectedMatch.week).toLocaleDateString()}</p>
                         </div>
-                        <MatchForm match={selectedMatch} onClose={handleCloseModal} />
+                        <MatchForm key={selectedMatch.match_id} match={selectedMatch} onClose={handleCloseModal} />
                     </div>
                 </div>
             )}

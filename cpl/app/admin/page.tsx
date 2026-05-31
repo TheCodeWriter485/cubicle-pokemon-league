@@ -240,6 +240,7 @@ export default function Admin() {
                             {selectedMatch && (
                                 <div className="mt-8 pt-8 border-t border-zinc-200 dark:border-zinc-800">
                                     <MatchForm
+                                        key={selectedMatch.match_id}
                                         match={selectedMatch}
                                         onClose={() => {
                                             setSelectedMatchId("")

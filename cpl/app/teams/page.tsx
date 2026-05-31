@@ -2,20 +2,63 @@
 import { useEffect, useState } from 'react';
 import SideBar from "../sidebar";
 import { PokemonTeamCard, ItemTeamCard } from "../teamcard";
+import MatchStatsModal from "../match_stats_modal";
 
-function TeamCard({ team, matches, teams, loggedIn, username }: { team: any, matches: any[], teams: any[], loggedIn: boolean, username: string }) {
+type Match = {
+    match_id: number | string
+    week: string
+    done?: boolean | number
+    winner?: string
+    team_1?: number | string
+    team_2?: number | string
+    team_1_name?: string
+    team_2_name?: string
+    round1_url?: string | null
+    round2_url?: string | null
+    round3_url?: string | null
+    match_data?: unknown
+}
+
+type TeamMember = {
+    pokemon: string
+}
+
+type TeamItem = {
+    item: string
+}
+
+type Team = {
+    id: number | string
+    Username?: string
+    TeamName?: string
+    League?: string
+    Points?: number | string
+    TrainerTip?: string
+    Wins?: number | string
+    Losses?: number | string
+    KO?: number | string
+    Dif?: number | string
+    Elo?: number | string
+    ELO?: number | string
+    members: TeamMember[]
+    items: TeamItem[]
+}
+
+const sameId = (a?: number | string, b?: number | string) => a?.toString() === b?.toString();
+
+function TeamCard({ team, matches, teams, loggedIn, username, onSelectMatch }: { team: Team, matches: Match[], teams: Team[], loggedIn: boolean, username: string, onSelectMatch: (match: Match) => void }) {
     const [showMatches, setShowMatches] = useState(false);
 
     const getTeamMatches = () => {
         return matches
-            .filter(m => m.team_1 === team.id || m.team_2 === team.id)
+            .filter(m => sameId(m.team_1, team.id) || sameId(m.team_2, team.id))
             .sort((a, b) => new Date(a.week).getTime() - new Date(b.week).getTime());
     };
 
-    const getOpponentName = (match: any) => {
-        const opponentId = match.team_1 === team.id ? match.team_2 : match.team_1;
-        const opponent = teams.find(t => t.id === opponentId);
-        return opponent ? opponent.TeamName : `Team ${opponentId}`;
+    const getOpponentName = (match: Match) => {
+        const opponentId = sameId(match.team_1, team.id) ? match.team_2 : match.team_1;
+        const opponent = teams.find(t => sameId(t.id, opponentId));
+        return opponent ? opponent.TeamName : (sameId(match.team_1, team.id) ? match.team_2_name : match.team_1_name) || `Team ${opponentId}`;
     };
 
     const teamMatches = getTeamMatches();
@@ -51,12 +94,12 @@ function TeamCard({ team, matches, teams, loggedIn, username }: { team: any, mat
                 <strong>Pokémon:</strong>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px' }}>
                     {team.members.length > 0
-                        ? team.members.map((m: any, i: number) => (
+                        ? team.members.map((m, i: number) => (
                             <PokemonTeamCard
                                 key={i}
                                 name={m.pokemon}
                                 isOwner={loggedIn && team.Username === username}
-                                teamId={team.id}
+                                teamId={Number(team.id)}
                                 username={username}
                             />
                         ))
@@ -70,12 +113,12 @@ function TeamCard({ team, matches, teams, loggedIn, username }: { team: any, mat
                 <strong>Items:</strong>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px' }}>
                     {team.items.length > 0
-                        ? team.items.map((item: any, i: number) => (
+                        ? team.items.map((item, i: number) => (
                             <ItemTeamCard
                                 key={i}
                                 name={item.item}
                                 isOwner={loggedIn && team.Username === username}
-                                teamId={team.id}
+                                teamId={Number(team.id)}
                                 username={username}
                             />
                         ))
@@ -100,7 +143,7 @@ function TeamCard({ team, matches, teams, loggedIn, username }: { team: any, mat
 
                     {showMatches && (
                         <div style={{ marginTop: '8px' }}>
-                            {teamMatches.map((match: any) => {
+                            {teamMatches.map((match) => {
                                 const won = match.winner === team.TeamName;
                                 const opponent = getOpponentName(match);
 
@@ -114,6 +157,15 @@ function TeamCard({ team, matches, teams, loggedIn, username }: { team: any, mat
                                 return (
                                     <div
                                         key={match.match_id}
+                                        role="button"
+                                        tabIndex={0}
+                                        onClick={() => onSelectMatch(match)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter" || e.key === " ") {
+                                                e.preventDefault();
+                                                onSelectMatch(match);
+                                            }
+                                        }}
                                         style={{
                                             backgroundColor,
                                             border: `1px solid ${borderColor}`,
@@ -122,7 +174,8 @@ function TeamCard({ team, matches, teams, loggedIn, username }: { team: any, mat
                                             marginBottom: '6px',
                                             display: 'flex',
                                             justifyContent: 'space-between',
-                                            alignItems: 'center'
+                                            alignItems: 'center',
+                                            cursor: 'pointer'
                                         }}
                                     >
                                         <div style={{ color: 'white' }}>
@@ -152,10 +205,11 @@ function TeamCard({ team, matches, teams, loggedIn, username }: { team: any, mat
 }
 
 export default function Teams() {
-    const [teams, setTeams] = useState<any[]>([]);
-    const [matches, setMatches] = useState<any[]>([]);
+    const [teams, setTeams] = useState<Team[]>([]);
+    const [matches, setMatches] = useState<Match[]>([]);
     const [username, setUsername] = useState("");
     const [loggedIn, setLoggedIn] = useState(false);
+    const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
     const bookmarks = [{ id: 1, name: 'button' }];
 
     useEffect(() => {
@@ -219,11 +273,14 @@ export default function Teams() {
                                 teams={teams}
                                 loggedIn={loggedIn}
                                 username={username}
+                                onSelectMatch={setSelectedMatch}
                             />
                         ))}
                     </div>
                 ))}
             </div>
+
+            {selectedMatch && <MatchStatsModal match={selectedMatch} teams={teams} onClose={() => setSelectedMatch(null)} />}
         </main>
     );
 }
