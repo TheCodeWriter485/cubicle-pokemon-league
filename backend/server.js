@@ -118,7 +118,7 @@ async function applyMatchStatDelta(matchRow, totals, multiplier) {
     }
 
     for (const [pokemon, pokemonTotals] of Object.entries(totals.pokemon)) {
-        await dbPromise.query(
+        const [pokemonUpdate] = await dbPromise.query(
             `
                 UPDATE Pokemon
                 SET
@@ -148,6 +148,10 @@ async function applyMatchStatDelta(matchRow, totals, multiplier) {
                 pokemon
             ]
         );
+
+        if (pokemonUpdate.affectedRows === 0) {
+            throw new Error(`Pokemon not found while applying match stats: ${pokemon}`);
+        }
 
         await dbPromise.query(
             "UPDATE Pokemon SET Score = (COALESCE(Diff, 0) * 4) + (COALESCE(Kills, 0) * 10) + COALESCE(Wins, 0) WHERE NamePoke = ?",
@@ -496,7 +500,7 @@ app.post("/matches/update", async (req, res) => {
         };
         const winner = matchDataToStore.match_winner;
 
-        if (matchRow.done && previousMatchData?.stats_applied) {
+        if (matchRow.done && previousMatchData) {
             await applyMatchStatDelta(matchRow, getMatchStatTotals(previousMatchData), -1);
         }
 
@@ -508,7 +512,8 @@ app.post("/matches/update", async (req, res) => {
         return res.json(data);
     } catch (err) {
         await dbPromise.rollback();
-        return res.json(err);
+        console.error("Could not update match stats:", err);
+        return res.status(500).json({ error: err.message || "Could not update match stats" });
     }
 })
 
