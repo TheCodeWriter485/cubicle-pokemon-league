@@ -29,69 +29,40 @@ export function parseMatchData(data) {
     }
     */
 
-    const kills = {};
-    const deaths = {};
-    const pokemon_left = { "p1": 6, "p2": 6 };
-    const pokemon_list = [];
-    const p1_pokemon = [];
-    const p2_pokemon = [];
-    const player_names = { "p1": data.players[0], "p2": data.players[1] };
-    const pokemon_teams = {};
-    const alt_names = {};
+    let kills = {};
+    let deaths = {};
+    let pokemon_left = { "p1": 6, "p2": 6 };
+    let pokemon_list = [];
+    let p1_pokemon = [];
+    let p2_pokemon = [];
+    let player_names = { "p1": data.players[0], "p2": data.players[1] };
+    let pokemon_teams = {};
+    let alt_names = {};
     let winner = "";
-
-    const normalizeSlot = (slot) => slot?.split(': ')[0]?.substring(0, 2);
-    const getNickname = (slot) => slot?.split(': ')[1];
-    const getPokemonName = (details) => details?.split(',')[0];
-    const rememberAlias = (slot, details) => {
-        const nickname = getNickname(slot);
-        const pokemon = getPokemonName(details);
-        const team = normalizeSlot(slot);
-
-        if (!pokemon || !team) return;
-
-        pokemon_teams[pokemon] = team;
-        alt_names[pokemon] = pokemon;
-
-        if (nickname) {
-            alt_names[nickname] = pokemon;
-        }
-    };
-    const officialName = (name) => alt_names[name] || name;
-    const ensurePokemonStats = (pokemon) => {
-        if (!pokemon) return;
-        if (!(pokemon in kills)) {
-            kills[pokemon] = 0;
-        }
-        if (!(pokemon in deaths)) {
-            deaths[pokemon] = 0;
-        }
-    };
-
     const logs = data.log.split('\n');
     for (let i = 0; i < logs.length; i++) {
-        const line = logs[i];
+        let line = logs[i];
         // GET POKEMON NAMES
         if (line.startsWith('|poke|')) {
             // Example line: |poke|p1|Rillaboom, F|
-            const parts = line.split('|');
-            const pokemon_name = getPokemonName(parts[3]);
-            if (!pokemon_name) continue;
-            pokemon_teams[pokemon_name] = parts[2];
-            alt_names[pokemon_name] = pokemon_name;
+            let pokemon_name = line.split('|')[3].split(',')[0];
+            pokemon_teams[pokemon_name] = line.split('|')[2];
             pokemon_list.push(pokemon_name);
-            ensurePokemonStats(pokemon_name);
-            if (parts[2] === "p1") {
+            if (line.split('|')[2] === "p1") {
                 p1_pokemon.push(pokemon_name);
-            } else if (parts[2] === "p2") {
+            } else if (line.split('|')[2] === "p2") {
                 p2_pokemon.push(pokemon_name);
             }
         }
         // GET ALTERNATE NAMES
-        else if (line.startsWith('|switch|') || line.startsWith('|drag|') || line.startsWith('|replace|')) {
+        else if (line.startsWith('|switch|')) {
             // Example line: |switch|p1a: Rillaboom|Rillaboom, F|100/100
-            const parts = line.split('|');
-            rememberAlias(parts[2], parts[3]);
+            let parts = line.split('|');
+            let alt_name = parts[2].split(': ')[1];
+            let official_name = parts[3].split(',')[0];
+            if (!(alt_name in alt_names)) {
+                alt_names[alt_name] = official_name;
+            }
         }
         // TRACK K/D
         /*
@@ -101,18 +72,16 @@ export function parseMatchData(data) {
             We look for |-damage| until we hit another |...| or | line that isn't |-...| or |faint|
         */
         else if (line.startsWith('|move|')) {
-            const mover_alt_name = getNickname(line.split('|')[2]);
-            const mover_official_name = officialName(mover_alt_name);
-            if (!mover_official_name) continue;
+            let mover_alt_name = line.split('|')[2].split(': ')[1];
+            let mover_official_name = alt_names[mover_alt_name];
             let j = i + 1;
             while (j < logs.length) {
-                const next_line = logs[j];
+                let next_line = logs[j];
                 if (next_line.startsWith('|-damage|')) {
                     if (next_line.includes('fnt')) {
                         // Get pokemon fainting team and make sure it is not team of mover
-                        const fainting_team = normalizeSlot(next_line.split('|')[2]);
+                        let fainting_team = next_line.split('|')[2].split(': ')[0].substring(0, 2);
                         if (fainting_team !== pokemon_teams[mover_official_name]) {
-                            ensurePokemonStats(mover_official_name);
                             kills[mover_official_name] = (kills[mover_official_name] || 0) + 1;
                         }
                     }
@@ -128,14 +97,13 @@ export function parseMatchData(data) {
             For Deaths: we wait for the |faint| blocks to increment.
          */
         else if (line.startsWith('|faint|')) {
-            const fainted_alt_name = getNickname(line.split('|')[2]);
-            const fainted_official_name = officialName(fainted_alt_name);
-            if (!fainted_official_name) continue;
-            ensurePokemonStats(fainted_official_name);
+            console.log(alt_names)
+            let fainted_alt_name = line.split('|')[2].split(': ')[1];
+            console.log(fainted_alt_name)
+            let fainted_official_name = alt_names[fainted_alt_name];
+            console.log(fainted_official_name)
             deaths[fainted_official_name] = (deaths[fainted_official_name] || 0) + 1;
-            if (pokemon_teams[fainted_official_name]) {
-                pokemon_left[pokemon_teams[fainted_official_name]] -= 1;
-            }
+            pokemon_left[pokemon_teams[fainted_official_name]] -= 1;
         }
         // GET WINNER
         else if (line.startsWith('|win|')) {
@@ -144,8 +112,14 @@ export function parseMatchData(data) {
             winner = parts[2];
         }
         // GO THROUGH POKEMON LIST AND ENSURE KILLS/DEATHS ARE RECORDED
-        for (let j = 0; j < pokemon_list.length; j++) {
-            ensurePokemonStats(pokemon_list[j]);
+        for (let i = 0; i < pokemon_list.length; i++) {
+            let pname = pokemon_list[i];
+            if (!(pname in kills)) {
+                kills[pname] = 0;
+            }
+            if (!(pname in deaths)) {
+                deaths[pname] = 0;
+            }
         }
     }
     const output = {
