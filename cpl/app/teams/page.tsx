@@ -210,7 +210,11 @@ export default function Teams() {
     const [username, setUsername] = useState("");
     const [loggedIn, setLoggedIn] = useState(false);
     const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
-    const bookmarks = [{ id: 1, name: 'button' }];
+    const bookmarks = [
+    { id: "league-Major", name: 'Major' },
+    { id: "league-Intermediate", name: 'Inter' },
+    { id: "league-Minor", name: 'Minor' }
+];
 
     useEffect(() => {
         async function loadData() {
@@ -261,7 +265,7 @@ export default function Teams() {
             <div className="window">
                 <h1>Teams</h1>
                 {sortedTeams().map(group => (
-                    <div key={group.league}>
+                    <div key={group.league} id={`league-${group.league}`}>
                         <h2 style={{ borderBottom: '2px solid #dee2e6', paddingBottom: '0.5rem', marginBottom: '1rem' }}>
                             {group.league} League
                         </h2>

@@ -28,7 +28,7 @@ export default function Card(props: { name: string, value: number, image: number
             fetchPokeData();
         }
     };
-
+    
     useEffect(() => {
         checkLogin();
         // Only do individual ownership fetch if no override is provided
@@ -146,38 +146,38 @@ export default function Card(props: { name: string, value: number, image: number
 
     const result = await purchaseResponse.json();
 
-    if (purchaseResponse.ok) {
-        await fetch("http://localhost:3030/team/updatepoints", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                username: username,
-                points: Number(userTeam.Points) - Number(props.value)
-            })
-        });
+if (purchaseResponse.ok) {
+    await fetch("http://localhost:3030/team/updatepoints", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            username: username,
+            points: Number(userTeam.Points) - Number(props.value)
+        })
+    });
 
-        await fetch("http://localhost:3030/pokemon/claim", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                username: username,
-                pokemonName: props.name
-            })
-        });
+    await fetch("http://localhost:3030/pokemon/claim", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: username, pokemonName: props.name })
+    });
 
-        // Deduct one trade
-        await fetch("http://localhost:3030/team/updatetrades", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                username: username,
-                trades: Number(userTeam.trades) - 1
-            })
-        });
+    // Log the trade
+    await fetch("http://localhost:3030/tradelog/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            username: username,
+            team_name: userTeam.TeamName,
+            action: "BUY",
+            pokemon_or_item: props.name,
+            points: props.value
+        })
+    });
 
-        setOwnedBy(username);
-        alert(`${props.name} purchased successfully! Trades remaining: ${Number(userTeam.trades) - 1}`);
-    } else {
+    setOwnedBy(username);
+    alert(`${props.name} purchased successfully!`);
+} else {
         alert("Something went wrong with the purchase.");
         console.error(result);
     }
@@ -236,7 +236,6 @@ export default function Card(props: { name: string, value: number, image: number
                         <hr style={{ borderColor: '#e3d109' }} />
                         <div className="d-flex justify-content-center gap-2">
                             <Button variant="success" size="sm" onClick={handlePurchase}>Buy</Button>
-                            <Button variant="secondary" size="sm" onClick={handlePurchaseClose}>Cancel</Button>
                         </div>
                     </Popover.Body>
                 </Popover>

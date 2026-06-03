@@ -4,6 +4,74 @@ import Overlay from 'react-bootstrap/Overlay';
 import Popover from 'react-bootstrap/Popover';
 import Button from 'react-bootstrap/Button';
 
+const ITEM_TO_POKEMON: Record<string, string> = {
+'Abomasite': 'abomasnow-mega',
+    'Absolite': 'absol-mega',
+    'Absolite Z': 'absol-mega',
+    'Aerodactylite': 'aerodactyl-mega',
+    'Aggronite': 'aggron-mega',
+    'Alakazite': 'alakazam-mega',
+    'Altarianite': 'altaria-mega',
+    'Ampharosite': 'ampharos-mega',
+    'Audinite': 'audino-mega',
+    'Banettite': 'banette-mega',
+    'Beedrillite': 'beedrill-mega',
+    'Blastoisinite': 'blastoise-mega',
+    'Blazikenite': 'blaziken-mega',
+    'Cameruptite': 'camerupt-mega',
+    'Charizardite X': 'charizard-mega-x',
+    'Charizardite Y': 'charizard-mega-y',
+    'Garchompite': 'garchomp-mega',
+    'Garchompite Z': 'garchomp-mega',
+    'Gardevoirite': 'gardevoir-mega',
+    'Galladite': 'gallade-mega',
+    'Gengarite': 'gengar-mega',
+    'Glalitite': 'glalie-mega',
+    'Gyaradosite': 'gyarados-mega',
+    'Heracronite': 'heracross-mega',
+    'Houndoominite': 'houndoom-mega',
+    'Kangaskhanite': 'kangaskhan-mega',
+    'Latiasite': 'latias-mega',
+    'Latiosite': 'latios-mega',
+    'Lopunnite': 'lopunny-mega',
+    'Lucarionite': 'lucario-mega',
+    'Lucarionite Z': 'lucario-mega',
+    'Manectite': 'manectric-mega',
+    'Mawilite': 'mawile-mega',
+    'Medichamite': 'medicham-mega',
+    'Metagrossite': 'metagross-mega',
+    'Mewtwonite X': 'mewtwo-mega-x',
+    'Mewtwonite Y': 'mewtwo-mega-y',
+    'Pidgeotite': 'pidgeot-mega',
+    'Pinsirite': 'pinsir-mega',
+    'Sablenite': 'sableye-mega',
+    'Salamencite': 'salamence-mega',
+    'Scizorite': 'scizor-mega',
+    'Sceptilite': 'sceptile-mega',
+    'Sharpedonite': 'sharpedo-mega',
+    'Slowbronite': 'slowbro-mega',
+    'Steelixite': 'steelix-mega',
+    'Swampertite': 'swampert-mega',
+    'Tyranitarite': 'tyranitar-mega',
+    'Venusaurite': 'venusaur-mega',
+    'Diancite': 'diancie-mega',
+    'Attackorite': 'deoxys-attack',
+    'Defendorite': 'deoxys-defense',
+    'Speedorite': 'deoxys-speed',
+    'Fan': 'rotom-fan',
+    'Lawmower': 'rotom-mow',
+    'Microwave': 'rotom-heat',
+    'Refridgator': 'rotom-frost',
+    'Washing Machine': 'rotom-wash',
+    'Gracidea': 'shaymin-sky',
+    'Prison Bottle': 'hoopa-unbound',
+    'Reveal Glass': 'thundurus-therian',
+    'Cornerstone Mask': 'ogerpon-cornerstone-mask',
+    'Hearthflame Mask': 'ogerpon-hearthflame-mask',
+    'Wellspring Mask': 'ogerpon-wellspring-mask',
+    'Zygarde Core': 'zygarde-complete',
+};
+
 // Pokemon Team Card
 export function PokemonTeamCard(props: { name: string, isOwner?: boolean, teamId?: number, username?: string }) {
     const [pokeData, setPokeData] = useState<any>(null);
@@ -56,6 +124,18 @@ export function PokemonTeamCard(props: { name: string, isOwner?: boolean, teamId
                 body: JSON.stringify({ username: null, pokemonName: props.name })
             });
 
+            await fetch("http://localhost:3030/tradelog/create", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+        username: props.username,
+        team_name: userTeam.TeamName,
+        action: "SELL",
+        pokemon_or_item: props.name,
+        points: dbData.PointValue
+    })
+});
+
             alert(`${props.name} sold successfully!`);
             setShow(false);
             window.location.reload();
@@ -73,7 +153,7 @@ export function PokemonTeamCard(props: { name: string, isOwner?: boolean, teamId
         >
             {pokeData && (
                 <img
-                    src={"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/"+ pokeData.id +".png"}
+                    src={"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/" + pokeData.id + ".png"}
                     style={{ width: '64px', height: '64px', objectFit: 'contain' }}
                     loading="lazy"
                 />
@@ -115,7 +195,6 @@ export function PokemonTeamCard(props: { name: string, isOwner?: boolean, teamId
                             <p>Loading...</p>
                         )}
 
-                        {/* Sell button only for owner */}
                         {props.isOwner && dbData && (
                             <>
                                 <hr style={{ borderColor: '#e3d109' }} />
@@ -136,6 +215,8 @@ export function PokemonTeamCard(props: { name: string, isOwner?: boolean, teamId
 // Item Team Card
 export function ItemTeamCard(props: { name: string, isOwner?: boolean, teamId?: number, username?: string }) {
     const [itemData, setItemData] = useState<any>(null);
+    const [transformStats, setTransformStats] = useState<any>(null);
+    const [loadingStats, setLoadingStats] = useState(false);
     const [show, setShow] = useState(false);
     const ref = useRef<HTMLDivElement>(null);
 
@@ -152,6 +233,26 @@ export function ItemTeamCard(props: { name: string, isOwner?: boolean, teamId?: 
         }
         fetchData();
     }, [props.name]);
+
+    async function fetchTransformStats() {
+        const slug = ITEM_TO_POKEMON[props.name];
+        if (!slug || transformStats) return;
+        setLoadingStats(true);
+        try {
+            const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${slug}`);
+            const data = await res.json();
+            setTransformStats(data);
+        } catch (err) {
+            console.warn("Could not fetch transform stats:", err);
+        } finally {
+            setLoadingStats(false);
+        }
+    }
+
+    const handleClick = () => {
+        setShow(!show);
+        if (!show) fetchTransformStats();
+    };
 
     async function handleSell() {
         try {
@@ -174,6 +275,18 @@ export function ItemTeamCard(props: { name: string, isOwner?: boolean, teamId?: 
                 })
             });
 
+            await fetch("http://localhost:3030/tradelog/create", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+        username: props.username,
+        team_name: userTeam.TeamName,
+        action: "SELL",
+        pokemon_or_item: props.name,
+        points: itemData.points
+    })
+});
+
             alert(`${props.name} sold successfully!`);
             setShow(false);
             window.location.reload();
@@ -183,10 +296,12 @@ export function ItemTeamCard(props: { name: string, isOwner?: boolean, teamId?: 
         }
     }
 
+    const hasTransform = !!ITEM_TO_POKEMON[props.name];
+
     return (
         <div
             ref={ref}
-            onClick={() => setShow(!show)}
+            onClick={handleClick}
             style={{ display: 'inline-block', textAlign: 'center', cursor: 'pointer', margin: '4px' }}
         >
             {itemData && (
@@ -200,19 +315,52 @@ export function ItemTeamCard(props: { name: string, isOwner?: boolean, teamId?: 
             <div style={{ fontSize: '0.75rem', fontWeight: 'bold' }}>{props.name}</div>
 
             <Overlay target={ref.current} show={show} placement="top" rootClose onHide={() => setShow(false)}>
-                <Popover style={{ backgroundColor: '#000000', border: '1px solid #e3d109', maxWidth: '250px', zIndex: 9999 }}>
+                <Popover style={{ backgroundColor: '#000000', border: '1px solid #e3d109', maxWidth: '280px', zIndex: 9999 }}>
                     <Popover.Header className="text-center" style={{ color: 'white', backgroundColor: '#111' }}>{props.name}</Popover.Header>
                     <Popover.Body style={{ color: 'white' }}>
                         {itemData ? (
                             <>
                                 <p>{itemData.descr}</p>
                                 <p><strong>Cost:</strong> {itemData.points} points</p>
+
+                                {/* Transform Stats */}
+                                {hasTransform && (
+                                    <>
+                                        <hr style={{ borderColor: '#e3d109' }} />
+                                        {loadingStats ? (
+                                            <p>Loading transform stats...</p>
+                                        ) : transformStats ? (
+                                            <>
+                                                <img
+                                                    src={transformStats.sprites?.front_default}
+                                                    alt={transformStats.name}
+                                                    style={{ width: '80px', height: '80px', objectFit: 'contain', display: 'block', margin: '0 auto' }}
+                                                />
+                                                <p style={{ textTransform: 'capitalize', fontWeight: 'bold', textAlign: 'center' }}>
+                                                    {transformStats.name.replace(/-/g, ' ')}
+                                                </p>
+                                                <p style={{ fontSize: '0.85rem' }}>
+                                                    <strong>Abilities:</strong> {transformStats.abilities.map((a: any) => a.ability.name).join(', ')}
+                                                </p>
+                                                <hr style={{ borderColor: '#e3d109' }} />
+                                                <div style={{ fontSize: '0.85rem' }}>
+                                                    <strong>Stats:</strong>
+                                                    {transformStats.stats.map((s: any) => (
+                                                        <div key={s.stat.name} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                            <span style={{ textTransform: 'capitalize' }}>{s.stat.name}:</span>
+                                                            <span>{s.base_stat}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </>
+                                        ) : null}
+                                    </>
+                                )}
                             </>
                         ) : (
                             <p>Loading...</p>
                         )}
 
-                        {/* Sell button only for owner */}
                         {props.isOwner && itemData && (
                             <>
                                 <hr style={{ borderColor: '#e3d109' }} />

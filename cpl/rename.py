@@ -1,7 +1,7 @@
 import os
 
 # Folder containing images
-folder = "img"
+folder = "public/img"
 
 # Get all files in folder
 files = [
@@ -13,9 +13,10 @@ files = [
 files.sort()
 
 # Starting number
-start_num = 101
+start_num = 150
 
 for i, filename in enumerate(files):
+
     old_path = os.path.join(folder, filename)
 
     # Keep original extension

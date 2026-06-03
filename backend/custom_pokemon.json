@@ -1,0 +1,15 @@
+{
+    "barbaracle-mega": {
+        "name": "Mega Barbaracle",
+        "sprites": { "front_default": "/sprites/custom/barbaracle-mega.png" },
+        "abilities": [{ "ability": { "name": "tough-claws" } }],
+        "stats": [
+            { "stat": { "name": "hp" }, "base_stat": 72 },
+            { "stat": { "name": "attack" }, "base_stat": 155 },
+            { "stat": { "name": "defense" }, "base_stat": 130 },
+            { "stat": { "name": "special-attack" }, "base_stat": 63 },
+            { "stat": { "name": "special-defense" }, "base_stat": 89 },
+            { "stat": { "name": "speed" }, "base_stat": 92 }
+        ]
+    }
+}

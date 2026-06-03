@@ -229,15 +229,50 @@ app.get('/team/full', (req, res) => {
 });
 
 app.post('/team/create', (req, res) => {
-    const { Username, League, TeamName, Logo, Epithat, TrainerTip, Season, Wins, Losses, KO, Dif, ELO, Points, trades } = req.body;
+    const { Username, League, TeamName, Logo, Epithat, TrainerTip, Season, Wins, Losses, KO, Dif, ELO, Points, trades, showdown_acct } = req.body;
     db.query(
-        'INSERT INTO team (Username, League, TeamName, Logo, Epithat, TrainerTip, Season, Wins, Losses, KO, Dif, Elo, Points, trades) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-        [Username, League, TeamName, Logo, Epithat, TrainerTip, Season, Wins, Losses, KO, Dif, ELO, Points, trades],
+        'INSERT INTO team (Username, League, TeamName, Logo, Epithat, TrainerTip, Season, Wins, Losses, KO, Dif, Elo, Points, trades, showdown_acct) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [Username, League, TeamName, Logo, Epithat, TrainerTip, Season, Wins, Losses, KO, Dif, ELO, Points, trades, showdown_acct],
         (err, results) => {
             if (err) return res.json(err);
             return res.json(results);
         }
     );
+});
+
+app.get('/tradelog', (req, res) => {
+    // Get trades from the current week (Monday to Sunday)
+    const sql = `
+        SELECT * FROM tradelog 
+        WHERE trade_date >= DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY)
+        ORDER BY trade_date DESC
+    `;
+    db.query(sql, (err, data) => {
+        if (err) return res.json(err);
+        return res.json(data);
+    });
+});
+
+app.post('/tradelog/create', (req, res) => {
+    const { username, team_name, action, pokemon_or_item, points } = req.body;
+    db.query(
+        'INSERT INTO tradelog (username, team_name, action, pokemon_or_item, points) VALUES (?, ?, ?, ?, ?)',
+        [username, team_name, action, pokemon_or_item, points],
+        (err, results) => {
+            if (err) return res.json(err);
+            return res.json(results);
+        }
+    );
+});
+
+const customPokemon = require('./custom_pokemon.json');
+
+app.get('/custompokemon/:name', (req, res) => {
+    const name = req.params.name.toLowerCase();
+    if (customPokemon[name]) {
+        return res.json(customPokemon[name]);
+    }
+    return res.status(404).json({ error: 'Not found' });
 });
 
 app.post('/team/updatepoints', (req, res) => {

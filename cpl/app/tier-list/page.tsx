@@ -83,7 +83,29 @@ async function fetchPokemon() {
         return () => clearInterval(interval);
     }, [draftSchedule]);
 
-    const bookmarks = [{ id: 1, name: 'button' }]
+    const bookmarks = [
+    { id: "tier-20", name: '20' },
+    { id: "tier-19", name: '19' },
+    { id: "tier-18", name: '18' },
+    { id: "tier-17", name: '17' },
+    { id: "tier-16", name: '16' },
+    { id: "tier-15", name: '15' },
+    { id: "tier-14", name: '14' },
+    { id: "tier-13", name: '13' },
+    { id: "tier-12", name: '12' },
+    { id: "tier-11", name: '11' },
+    { id: "tier-10", name: '10' },
+    { id: "tier-9", name: '9' },
+    { id: "tier-8", name: '8' },
+    { id: "tier-7", name: '7' },
+    { id: "tier-6", name: '6' },
+    { id: "tier-5", name: '5' },
+    { id: "tier-4", name: '4' },
+    { id: "tier-3", name: '3' },
+    { id: "tier-2", name: '2' },
+    { id: "tier-1", name: '1' },
+    { id: "tier-0", name: '0' }
+]
     const reversedTiers = [...pokemon].reverse();
 
     return (
@@ -137,7 +159,7 @@ async function fetchPokemon() {
                 {reversedTiers.map((tier, index) => {
                     const tierIndex = 20 - index;
                     return (
-                        <div key={tierIndex} style={{ marginBottom: '2rem' }}>
+                        <div key={tierIndex} id={`tier-${tierIndex}`} style={{ marginBottom: '2rem' }}>
                             <h2 style={{ textAlign: 'center', fontWeight: 'bold', fontSize: '2rem', borderBottom: '2px solid #dee2e6', marginBottom: '12px' }}>
                                 {tierIndex} Points
                             </h2>

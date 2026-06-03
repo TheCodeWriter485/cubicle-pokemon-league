@@ -6,6 +6,7 @@ export default function TeamForm() {
         Username: '',
         League: 'Major',
         TeamName: '',
+        showdown_acct: '',
         Logo: '',
         Epithat: '',
         TrainerTip: '',
@@ -44,6 +45,7 @@ export default function TeamForm() {
                     Username: '',
                     League: 'Major',
                     TeamName: '',
+                    showdown_acct: '',
                     Logo: '',
                     Epithat: '',
                     TrainerTip: '',
@@ -82,6 +84,7 @@ export default function TeamForm() {
                     />
                 </div>
 
+
                 {/* Team Name */}
                 <div className="flex flex-col gap-1">
                     <label className="text-sm font-semibold">Team Name</label>
@@ -91,6 +94,19 @@ export default function TeamForm() {
                         placeholder="e.g. Buenos Muchachos"
                         value={form.TeamName}
                         onChange={e => updateField('TeamName', e.target.value)}
+                        className="px-3 py-2 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    />
+                </div>
+
+                {/* Team Name */}
+                <div className="flex flex-col gap-1">
+                    <label className="text-sm font-semibold">Team Name</label>
+                    <input
+                        required
+                        type="text"
+                        placeholder="e.g. greatbed2"
+                        value={form.showdown_acct}
+                        onChange={e => updateField('showdown_acct', e.target.value)}
                         className="px-3 py-2 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                     />
                 </div>

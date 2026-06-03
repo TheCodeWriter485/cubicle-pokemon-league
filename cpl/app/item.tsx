@@ -1,18 +1,95 @@
-import { useState, useEffect } from 'react';
+'use client'
+import { useState, useEffect, useRef } from 'react';
 import Button from 'react-bootstrap/Button';
-import Box from 'react-bootstrap/Card';
-import { Modal } from 'react-bootstrap';
+import Overlay from 'react-bootstrap/Overlay';
+import Popover from 'react-bootstrap/Popover';
+
+// Maps item name to PokeAPI pokemon slug
+const ITEM_TO_POKEMON: Record<string, string> = {
+    // Mega Stones
+'Abomasite': 'abomasnow-mega',
+    'Absolite': 'absol-mega',
+    'Absolite Z': 'absol-mega',
+    'Aerodactylite': 'aerodactyl-mega',
+    'Aggronite': 'aggron-mega',
+    'Alakazite': 'alakazam-mega',
+    'Altarianite': 'altaria-mega',
+    'Ampharosite': 'ampharos-mega',
+    'Audinite': 'audino-mega',
+    'Banettite': 'banette-mega',
+    'Beedrillite': 'beedrill-mega',
+    'Blastoisinite': 'blastoise-mega',
+    'Blazikenite': 'blaziken-mega',
+    'Cameruptite': 'camerupt-mega',
+    'Charizardite X': 'charizard-mega-x',
+    'Charizardite Y': 'charizard-mega-y',
+    'Garchompite': 'garchomp-mega',
+    'Garchompite Z': 'garchomp-mega-z',
+    'Gardevoirite': 'gardevoir-mega',
+    'Galladite': 'gallade-mega',
+    'Gengarite': 'gengar-mega',
+    'Glalitite': 'glalie-mega',
+    'Gyaradosite': 'gyarados-mega',
+    'Heracronite': 'heracross-mega',
+    'Houndoominite': 'houndoom-mega',
+    'Kangaskhanite': 'kangaskhan-mega',
+    'Latiasite': 'latias-mega',
+    'Latiosite': 'latios-mega',
+    'Lopunnite': 'lopunny-mega',
+    'Lucarionite': 'lucario-mega',
+    'Lucarionite Z': 'lucario-mega-z',
+    'Manectite': 'manectric-mega',
+    'Mawilite': 'mawile-mega',
+    'Medichamite': 'medicham-mega',
+    'Metagrossite': 'metagross-mega',
+    'Mewtwonite X': 'mewtwo-mega-x',
+    'Mewtwonite Y': 'mewtwo-mega-y',
+    'Pidgeotite': 'pidgeot-mega',
+    'Pinsirite': 'pinsir-mega',
+    'Sablenite': 'sableye-mega',
+    'Salamencite': 'salamence-mega',
+    'Scizorite': 'scizor-mega',
+    'Sceptilite': 'sceptile-mega',
+    'Sharpedonite': 'sharpedo-mega',
+    'Slowbronite': 'slowbro-mega',
+    'Steelixite': 'steelix-mega',
+    'Swampertite': 'swampert-mega',
+    'Tyranitarite': 'tyranitar-mega',
+    'Venusaurite': 'venusaur-mega',
+    'Diancite': 'diancie-mega',
+    // Deoxys forms
+    'Attackorite': 'deoxys-attack',
+    'Defendorite': 'deoxys-defense',
+    'Speedorite': 'deoxys-speed',
+    // Rotom forms
+    'Fan': 'rotom-fan',
+    'Lawmower': 'rotom-mow',
+    'Microwave': 'rotom-heat',
+    'Refridgator': 'rotom-frost',
+    'Washing Machine': 'rotom-wash',
+    // Other forms
+    'Gracidea': 'shaymin-sky',
+    'Prison Bottle': 'hoopa-unbound',
+    'Reveal Glass': 'thundurus-therian',
+    'Cornerstone Mask': 'ogerpon-cornerstone-mask',
+    'Hearthflame Mask': 'ogerpon-hearthflame-mask',
+    'Wellspring Mask': 'ogerpon-wellspring-mask',
+    'Zygarde Core': 'zygarde-complete',
+};
 
 export default function Item(props: { name: string, value: number, image: number, desc: string }) {
-    const [show, setShow] = useState(false);
     const [showPurchase, setShowPurchase] = useState(false);
     const [loggedIn, setLoggedIn] = useState(false);
     const [username, setUsername] = useState("");
+    const [pokeStats, setPokeStats] = useState<any>(null);
+    const [loadingStats, setLoadingStats] = useState(false);
+    const cardRef = useRef<HTMLDivElement>(null);
 
-    const handleClose = () => setShow(false);
-    const handleShow = () => setShow(true);
     const handlePurchaseClose = () => setShowPurchase(false);
-    const handlePurchaseShow = () => setShowPurchase(true);
+    const handlePurchaseShow = () => {
+        setShowPurchase(true);
+        fetchTransformStats();
+    };
 
     useEffect(() => {
         checkLogin();
@@ -24,93 +101,159 @@ export default function Item(props: { name: string, value: number, image: number
         });
         const data = await response.json();
         setLoggedIn(data.loggedin);
-        setUsername(data.username); // assumes the auth/status endpoint returns a username
+        setUsername(data.username);
+    }
+
+    async function fetchTransformStats() {
+        const pokemonSlug = ITEM_TO_POKEMON[props.name];
+        if (!pokemonSlug) return;
+        setLoadingStats(true);
+        try {
+            const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${pokemonSlug}`);
+            const data = await res.json();
+            setPokeStats(data);
+            
+        } catch (err) {
+            console.warn("Could not fetch transform stats:", err);
+        } finally {
+            setLoadingStats(false);
+        }
     }
 
     async function handlePurchase() {
-        // Step 1: Check if logged in
         if (!loggedIn) {
             alert("You must be logged in to purchase items.");
             return;
         }
 
-        // Step 2: Fetch all teams and find one matching the logged in user
         const response = await fetch("http://localhost:3030/team");
         const teams = await response.json();
-        console.log(teams);
         const userTeam = teams.find((team: any) => team.Username === username);
-
-        console.log("Logged in as:", username);
 
         if (!userTeam) {
             alert("No team found for your account.");
             return;
         }
-        else{
-            if(userTeam.Points - props.value > -1){
-                const purchaseResponse = await fetch("http://localhost:3030/teamitem/create", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        team_id: userTeam.id,
-                        item: props.name
-                    })
-                });
 
-                const result = await purchaseResponse.json();
-
-                if (purchaseResponse.ok) {
-                     await fetch("http://localhost:3030/team/updatepoints", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify({
-                            username: username,
-                            points: userTeam.Points - props.value
-                        })
-                    });
-                    alert(`${props.name} purchased successfully!`);
-                } else {
-                    alert("Something went wrong with the purchase.");
-                    console.error(result);
-                }
-            }
+        if (userTeam.Points - props.value < 0) {
+            alert("You don't have enough points to purchase this item.");
+            handlePurchaseClose();
+            return;
         }
 
+        const purchaseResponse = await fetch("http://localhost:3030/teamitem/create", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ team_id: userTeam.id, item: props.name })
+        });
+
+        const result = await purchaseResponse.json();
+
+if (purchaseResponse.ok) {
+    await fetch("http://localhost:3030/team/updatepoints", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            username: username,
+            points: userTeam.Points - props.value
+        })
+    });
+
+    // Log the trade
+    await fetch("http://localhost:3030/tradelog/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            username: username,
+            team_name: userTeam.TeamName,
+            action: "BUY",
+            pokemon_or_item: props.name,
+            points: props.value
+        })
+    });
+
+    alert(`${props.name} purchased successfully!`);
+} else {
+            alert("Something went wrong with the purchase.");
+            console.error(result);
+        }
 
         handlePurchaseClose();
     }
 
+    const hasTransform = !!ITEM_TO_POKEMON[props.name];
+
     return (
-        <Box style={{ width: '18rem' }}>
-            <Box.Img
-                variant="top"
+        <div
+            ref={cardRef}
+            onClick={handlePurchaseShow}
+            style={{ cursor: 'pointer', textAlign: 'center', padding: '8px' }}
+        >
+            <img
                 src={`/img/${props.image}.png`}
-                style={{ width: '25%', height: '25%', objectFit: 'cover' }}
+                alt={props.name}
+                style={{ width: '64px', height: '64px', objectFit: 'contain' }}
+                loading="lazy"
             />
-            <Box.Body>
-                <Button variant="primary" style={{ marginRight: '8px' }} onClick={handleShow}>{props.name}</Button>
-                <Button variant="success" onClick={handlePurchaseShow}>Buy</Button>
+            <div style={{ fontSize: '0.8rem', fontWeight: 'bold', marginTop: '4px' }}>{props.name}</div>
+            <div style={{ fontSize: '0.75rem' }}>{props.value} pts</div>
 
-                <Box.Text>{props.value}</Box.Text>
-            </Box.Body>
+            <Overlay target={cardRef.current} show={showPurchase} placement="top" rootClose onHide={handlePurchaseClose}>
+                <Popover style={{ backgroundColor: '#000000', border: '1px solid #e3d109', maxWidth: '320px', zIndex: 9999 }}>
+                    <Popover.Header as="h3" className="text-center" style={{ color: 'white', backgroundColor: '#111' }}>
+                        {props.name}
+                    </Popover.Header>
+                    <Popover.Body className="text-center" style={{ color: 'white' }}>
+                        <img
+                            src={`/img/${props.image}.png`}
+                            alt={props.name}
+                            style={{ width: '64px', height: '64px', objectFit: 'contain' }}
+                        />
+                        <p style={{ marginTop: '8px' }}>{props.desc}</p>
+                        <p><strong>Price:</strong> {props.value} pts</p>
 
-            <Modal show={showPurchase} onHide={handlePurchaseClose} className="text-center">
-                <Modal.Header closeButton>
-                    <Modal.Title>Purchase {props.name}?</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <p>{props.desc}</p>
-                    <p><strong>Price:</strong> {props.value}</p>
-                </Modal.Body>
-                <Modal.Footer style={{ justifyContent: 'center' }} className="gap-2">
-                    <Button variant="success" onClick={handlePurchase}>Yes</Button>
-                    <Button variant="secondary" onClick={handlePurchaseClose}>No</Button>
-                </Modal.Footer>
-            </Modal>
-        </Box>
+                        {/* Transform Stats */}
+                        {hasTransform && (
+                            <>
+                                <hr style={{ borderColor: '#e3d109' }} />
+                                {loadingStats ? (
+                                    <p>Loading transform stats...</p>
+                                ) : pokeStats ? (
+                                    <>
+                                        {/* Transform sprite */}
+                                        <img
+                                            src={pokeStats.sprites?.front_default}
+                                            alt={pokeStats.name}
+                                            style={{ width: '80px', height: '80px', objectFit: 'contain' }}
+                                        />
+                                        <p style={{ textTransform: 'capitalize', fontWeight: 'bold' }}>
+                                            {pokeStats.name.replace(/-/g, ' ')}
+                                        </p>
+                                        <p style={{ fontSize: '0.85rem' }}>
+                                            <strong>Abilities:</strong> {pokeStats.abilities.map((a: any) => a.ability.name).join(', ')}
+                                        </p>
+                                        <hr style={{ borderColor: '#e3d109' }} />
+                                        <div style={{ textAlign: 'left', fontSize: '0.85rem' }}>
+                                            <strong>Stats:</strong>
+                                            {pokeStats.stats.map((s: any) => (
+                                                <div key={s.stat.name} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                    <span style={{ textTransform: 'capitalize' }}>{s.stat.name}:</span>
+                                                    <span>{s.base_stat}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </>
+                                ) : null}
+                            </>
+                        )}
+
+                        <hr style={{ borderColor: '#e3d109' }} />
+                        <div className="d-flex justify-content-center gap-2">
+                            <Button variant="success" size="sm" onClick={handlePurchase}>Buy</Button>
+                        </div>
+                    </Popover.Body>
+                </Popover>
+            </Overlay>
+        </div>
     );
 }
