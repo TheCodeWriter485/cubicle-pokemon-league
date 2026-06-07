@@ -7,7 +7,7 @@ export default function ItemShop() {
   const [items, setItems] = useState<{ megaStones: any[], misc: any[] }>({ megaStones: [], misc: [] });
 
   useEffect(() => {
-    fetch('http://localhost:3030/itemshop')
+    fetch('http://129.80.79.84:3030/itemshop')
       .then((res) => res.json())
       .then((res) => {
         let megaStones: any[] = [];

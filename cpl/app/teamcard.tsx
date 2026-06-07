@@ -86,7 +86,7 @@ export function PokemonTeamCard(props: { name: string, isOwner?: boolean, teamId
                 const pokeJson = await pokeRes.json();
                 setPokeData(pokeJson);
 
-                const dbRes = await fetch(`http://localhost:3030/pokedata`);
+                const dbRes = await fetch(`http://129.80.79.84:3030/pokedata`);
                 const dbJson = await dbRes.json();
                 const match = dbJson.find((p: any) => p.NamePoke.toLowerCase() === props.name.toLowerCase());
                 setDbData(match);
@@ -99,17 +99,17 @@ export function PokemonTeamCard(props: { name: string, isOwner?: boolean, teamId
 
     async function handleSell() {
         try {
-            await fetch("http://localhost:3030/teammembers/delete", {
+            await fetch("http://129.80.79.84:3030/teammembers/delete", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ team_id: props.teamId, pokemon: props.name })
             });
 
-            const teamRes = await fetch("http://localhost:3030/team");
+            const teamRes = await fetch("http://129.80.79.84:3030/team");
             const teams = await teamRes.json();
             const userTeam = teams.find((t: any) => t.Username === props.username);
 
-            await fetch("http://localhost:3030/team/updatepoints", {
+            await fetch("http://129.80.79.84:3030/team/updatepoints", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -118,13 +118,13 @@ export function PokemonTeamCard(props: { name: string, isOwner?: boolean, teamId
                 })
             });
 
-            await fetch("http://localhost:3030/pokemon/claim", {
+            await fetch("http://129.80.79.84:3030/pokemon/claim", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ username: null, pokemonName: props.name })
             });
 
-            await fetch("http://localhost:3030/tradelog/create", {
+            await fetch("http://129.80.79.84:3030/tradelog/create", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -223,7 +223,7 @@ export function ItemTeamCard(props: { name: string, isOwner?: boolean, teamId?: 
     useEffect(() => {
         async function fetchData() {
             try {
-                const res = await fetch(`http://localhost:3030/itemshop`);
+                const res = await fetch(`http://129.80.79.84:3030/itemshop`);
                 const json = await res.json();
                 const match = json.find((i: any) => i.item.toLowerCase() === props.name.toLowerCase());
                 setItemData(match);
@@ -256,17 +256,17 @@ export function ItemTeamCard(props: { name: string, isOwner?: boolean, teamId?: 
 
     async function handleSell() {
         try {
-            await fetch("http://localhost:3030/teamitems/delete", {
+            await fetch("http://129.80.79.84:3030/teamitems/delete", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ team_id: props.teamId, item: props.name })
             });
 
-            const teamRes = await fetch("http://localhost:3030/team");
+            const teamRes = await fetch("http://129.80.79.84:3030/team");
             const teams = await teamRes.json();
             const userTeam = teams.find((t: any) => t.Username === props.username);
 
-            await fetch("http://localhost:3030/team/updatepoints", {
+            await fetch("http://129.80.79.84:3030/team/updatepoints", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -275,7 +275,7 @@ export function ItemTeamCard(props: { name: string, isOwner?: boolean, teamId?: 
                 })
             });
 
-            await fetch("http://localhost:3030/tradelog/create", {
+            await fetch("http://129.80.79.84:3030/tradelog/create", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({

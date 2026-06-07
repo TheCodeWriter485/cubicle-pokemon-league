@@ -22,7 +22,7 @@ export default function TierForm() {
             const formData = new FormData();
             formData.append('csv', file);
 
-            const res = await fetch('http://localhost:3030/admin/tierlist/update', {
+            const res = await fetch('http://129.80.79.84:3030/admin/tierlist/update', {
                 method: 'POST',
                 body: formData,
                 credentials: 'include'

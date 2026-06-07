@@ -37,7 +37,7 @@ export default function TierList() {
     const [tradingAllowed, setTradingAllowed] = useState(false);
 
 async function fetchPokemon() {
-    const res = await fetch('http://localhost:3030/pokedata');
+    const res = await fetch('http://129.80.79.84:3030/pokedata');
     const data = await res.json();
 
     let arr: any[][] = Array.from({ length: 21 }, () => []);
@@ -59,7 +59,7 @@ async function fetchPokemon() {
 }
 
     async function fetchSchedule() {
-        const res = await fetch('http://localhost:3030/draft/schedule');
+        const res = await fetch('http://129.80.79.84:3030/draft/schedule');
         const data = await res.json();
         setDraftSchedule(data);
         setTradingAllowed(isTradingAllowed(data));

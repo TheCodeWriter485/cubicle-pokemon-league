@@ -62,35 +62,33 @@ export default function Card(props: { name: string, value: number, image: number
         setPokeStats(data);
     }
 
-    async function handlePurchase() {
-        if (!loggedIn) {
-            alert("You must be logged in to purchase a Pokemon.");
-            return;
-        }
+async function handlePurchase() {
+    if (!loggedIn) {
+        alert("You must be logged in to purchase a Pokemon.");
+        return;
+    }
 
-        if (ownedBy !== null) {
-            alert(`${props.name} is already owned by ${ownedBy}.`);
-            handlePurchaseClose();
-            return;
-        }
+    if (ownedBy !== null) {
+        alert(`${props.name} is already owned by ${ownedBy}.`);
+        handlePurchaseClose();
+        return;
+    }
 
-        const response = await fetch("http://localhost:3030/team");
-        const teams = await response.json();
-        const userTeam = teams.find((team: any) => team.Username === username);
+    const response = await fetch("http://localhost:3030/team");
+    const teams = await response.json();
+    const userTeam = teams.find((team: any) => team.Username === username);
 
-        if (!userTeam) {
-            alert("No team found for your account.");
-            return;
-        }
+    if (!userTeam) {
+        alert("No team found for your account.");
+        return;
+    }
 
-        // Trades check
-        if (userTeam.trades < 1) {
-            alert("You have no more trades for the season!");
-            handlePurchaseClose();
-            return;
-        }
+    if (userTeam.trades !== null && userTeam.trades !== undefined && userTeam.trades < 1) {
+        alert("You have no more trades for the season!");
+        handlePurchaseClose();
+        return;
+    }
 
-    // Sunday check — block if last week's match is incomplete
     const now = new Date();
     const isSunday = now.getDay() === 0;
 
@@ -98,13 +96,12 @@ export default function Card(props: { name: string, value: number, image: number
         const matchRes = await fetch(`http://localhost:3030/matches/team/${userTeam.id}`);
         const matchData = await matchRes.json();
 
-        // Find last week's date range
         const lastMonday = new Date(now);
-        lastMonday.setDate(now.getDate() - 6); // last Monday
+        lastMonday.setDate(now.getDate() - 6);
         lastMonday.setHours(0, 0, 0, 0);
 
         const lastSunday = new Date(now);
-        lastSunday.setDate(now.getDate() - 1); // yesterday (Saturday)
+        lastSunday.setDate(now.getDate() - 1);
         lastSunday.setHours(23, 59, 59, 999);
 
         const incompleteLastWeek = matchData.find((m: any) => {
@@ -123,12 +120,31 @@ export default function Card(props: { name: string, value: number, image: number
     const fullTeams = await membersRes.json();
     const userFullTeam = fullTeams.find((team: any) => team.Username === username);
 
+    // 10 Pokemon limit check
     if (userFullTeam && userFullTeam.members.length >= 10) {
         alert("You already have 10 Pokémon on your team and cannot purchase more.");
         handlePurchaseClose();
         return;
     }
 
+    // High value limit check (max 2 pokemon worth 17+ points)
+    if (Number(props.value) >= 17) {
+        const allPokeRes = await fetch('http://localhost:3030/pokedata');
+        const allPokeData = await allPokeRes.json();
+
+        const highValueCount = userFullTeam.members.filter((m: any) => {
+            const pokeInfo = allPokeData.find((p: any) => p.NamePoke === m.pokemon);
+            return pokeInfo && Number(pokeInfo.PointValue) >= 17;
+        }).length;
+
+        if (highValueCount >= 2) {
+            alert("You can only have 2 Pokémon worth 17 or more points on your team.");
+            handlePurchaseClose();
+            return;
+        }
+    }
+
+    // Points check
     if (Number(userTeam.Points) - Number(props.value) < 0) {
         alert("You don't have enough points to purchase this Pokemon.");
         handlePurchaseClose();
@@ -138,46 +154,51 @@ export default function Card(props: { name: string, value: number, image: number
     const purchaseResponse = await fetch("http://localhost:3030/teammates/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            team_id: userTeam.id,
-            pokemon: props.name
-        })
+        body: JSON.stringify({ team_id: userTeam.id, pokemon: props.name })
     });
 
     const result = await purchaseResponse.json();
 
-if (purchaseResponse.ok) {
-    await fetch("http://localhost:3030/team/updatepoints", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            username: username,
-            points: Number(userTeam.Points) - Number(props.value)
-        })
-    });
+    if (purchaseResponse.ok) {
+        await fetch("http://localhost:3030/team/updatepoints", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                username: username,
+                points: Number(userTeam.Points) - Number(props.value)
+            })
+        });
 
-    await fetch("http://localhost:3030/pokemon/claim", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: username, pokemonName: props.name })
-    });
+        await fetch("http://localhost:3030/pokemon/claim", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username: username, pokemonName: props.name })
+        });
 
-    // Log the trade
-    await fetch("http://localhost:3030/tradelog/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            username: username,
-            team_name: userTeam.TeamName,
-            action: "BUY",
-            pokemon_or_item: props.name,
-            points: props.value
-        })
-    });
+        await fetch("http://localhost:3030/team/updatetrades", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                username: username,
+                trades: Number(userTeam.trades) - 1
+            })
+        });
 
-    setOwnedBy(username);
-    alert(`${props.name} purchased successfully!`);
-} else {
+        await fetch("http://localhost:3030/tradelog/create", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                username: username,
+                team_name: userTeam.TeamName,
+                action: "BUY",
+                pokemon_or_item: props.name,
+                points: props.value
+            })
+        });
+
+        setOwnedBy(username);
+        alert(`${props.name} purchased successfully! Trades remaining: ${Number(userTeam.trades) - 1}`);
+    } else {
         alert("Something went wrong with the purchase.");
         console.error(result);
     }

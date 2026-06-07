@@ -27,9 +27,9 @@ app.use(session({
 app.use(express.json());
 
 const db = mysql.createConnection({
-    host: "localHost",
-    user: 'root',
-    password: "Cubicle*2022",
+    host: "localhost",
+    user: 'cpluser',
+    password: "Gr0uD@n2022",
     database: 'cubicleData'
 })
 

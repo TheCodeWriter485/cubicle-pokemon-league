@@ -9,7 +9,7 @@ export default function AccountForm() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const response = await fetch("http://localhost:3030/account/create", {
+        const response = await fetch("http://129.80.79.84:3030/account/create", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

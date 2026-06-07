@@ -68,7 +68,7 @@ export default function NewsMarquee() {
   const [matches, setMatches] = useState<Match[]>([]);
 
   useEffect(() => {
-    fetch('http://localhost:3030/matches')
+    fetch('http://129.80.79.84:3030/matches')
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {

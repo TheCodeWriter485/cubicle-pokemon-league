@@ -18,7 +18,7 @@ export default function News() {
     const bookmarks = [{ id: 'recent-trades', name: 'Trades' }]
 
     useEffect(() => {
-        fetch('http://localhost:3030/tradelog')
+        fetch('http://129.80.79.84:3030/tradelog')
             .then(res => res.json())
             .then(data => {
                 if (Array.isArray(data)) setTrades(data);

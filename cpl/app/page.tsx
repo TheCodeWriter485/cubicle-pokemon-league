@@ -4,18 +4,49 @@ import SideBar from "./sidebar";
 
 export default function Home() {
   const [teams, setTeams] = useState<any[]>([]);
-  const bookmarks = [{ id: "please", name: 'halep' }, { id: "test", name: 'Test Button' }];
+  const [fullTeams, setFullTeams] = useState<any[]>([]);
+  const [pokeData, setPokeData] = useState<any[]>([]);
+  const bookmarks = [{ id: "1", name: 'Score' },{ id: "2", name: 'MVP' }, { id: "3", name: 'Rules' }];
 
   useEffect(() => {
-    fetch('http://localhost:3030/team')
+    fetch('http://129.80.79.84:3030/team')
       .then(res => res.json())
-      .then(data => setTeams(data));
+      .then(data => { if (Array.isArray(data)) setTeams(data); });
+
+    fetch('http://129.80.79.84:3030/team/full')
+      .then(res => res.json())
+      .then(data => { if (Array.isArray(data)) setFullTeams(data); });
+
+    fetch('http://129.80.79.84:3030/pokedata')
+      .then(res => res.json())
+      .then(data => { if (Array.isArray(data)) setPokeData(data); });
   }, []);
 
   const getLeagueTeams = (league: string) => {
     return teams
       .filter(t => t.League === league)
       .sort((a, b) => b.Elo - a.Elo);
+  };
+
+  const getTopPokemon = (league: string) => {
+    // Get all team IDs in this league
+    const leagueTeamIds = fullTeams
+      .filter(t => t.League === league)
+      .map(t => t.id.toString());
+
+    // Get pokemon owned by teams in this league
+    const leaguePokemon = pokeData.filter(p =>
+      p.OwnedBy !== null &&
+      fullTeams.some(t =>
+        t.League === league &&
+        t.Username === p.OwnedBy
+      )
+    );
+
+    // Sort by Score descending, take top 10
+    return leaguePokemon
+      .sort((a, b) => (b.Score ?? 0) - (a.Score ?? 0))
+      .slice(0, 10);
   };
 
   const renderLeague = (league: string) => {
@@ -27,7 +58,7 @@ export default function Home() {
         </h3>
         {leagueTeams.length > 0 ? (
           <ol style={{ paddingLeft: '1.5rem' }}>
-            {leagueTeams.map((team, i) => (
+            {leagueTeams.map((team) => (
               <li key={team.id} style={{ marginBottom: '8px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontWeight: 'bold' }}>{team.TeamName}</span>
@@ -48,15 +79,48 @@ export default function Home() {
     );
   };
 
-  const bookmarks2 = [{ id: "please", name: 'halep' }, { id: "test", name: 'Test Button' }]
+  const renderPokemonLeague = (league: string) => {
+    const topPokemon = getTopPokemon(league);
+    return (
+      <div style={{ flex: 1, padding: '0 1rem' }}>
+        <h3 style={{ textAlign: 'center', borderBottom: '2px solid #dee2e6', paddingBottom: '0.5rem', marginBottom: '1rem' }}>
+          {league} League
+        </h3>
+        {topPokemon.length > 0 ? (
+          <ol style={{ paddingLeft: '1.5rem' }}>
+            {topPokemon.map((poke, i) => (
+              <li key={poke.NamePoke} style={{ marginBottom: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontWeight: 'bold' }}>{poke.NamePoke}</span>
+                  <span style={{ fontSize: '0.85rem', color: '#6c757d', marginLeft: '8px' }}>
+                    Score: {poke.Score ?? 0}
+                  </span>
+                </div>
+                <div style={{ fontSize: '0.8rem', color: '#6c757d', display: 'flex', gap: '8px' }}>
+                  <span>W: {poke.Wins ?? 0}</span>
+                  <span>K: {poke.Kills ?? 0}</span>
+                  <span>D: {poke.Death ?? 0}</span>
+                  <span>Dif: {poke.Diff ?? 0}</span>
+                  <span style={{ marginLeft: 'auto' }}>Owner: {poke.OwnedBy}</span>
+                </div>
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <p style={{ color: '#6c757d', textAlign: 'center' }}>No Pokémon data yet</p>
+        )}
+      </div>
+    );
+  };
 
   return (
     <main className="page">
       <SideBar bookmarks={bookmarks} />
-      <div id="main" className="window">
+      <div id="1" className="window">
         <h1>Welcome to the Cubicle Pokemon League!</h1>
 
-        {/* League Rankings */}
+        {/* Team League Rankings */}
+        <h2 style={{ textAlign: 'center', marginBottom: '1rem' }}>Team Standings</h2>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem', borderBottom: '2px solid #dee2e6', paddingBottom: '2rem' }}>
           {renderLeague('Major')}
           <div style={{ width: '1px', backgroundColor: '#dee2e6' }} />
@@ -65,48 +129,50 @@ export default function Home() {
           {renderLeague('Minor')}
         </div>
 
-        <h1 id="please"> ;-;</h1>
-        <div>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent pharetra justo velit, et aliquet est congue in.
-          Aliquam posuere odio a nulla vestibulum, vel fringilla mauris vestibulum. Donec condimentum ipsum metus, mollis faucibus mi efficitur eu.
-          Praesent venenatis bibendum mauris ac efficitur. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas gravida convallis elit,
-          vitae rutrum ex commodo vel. Donec semper viverra nisi. Nunc iaculis, quam sed sagittis pulvinar, risus justo bibendum tellus, vitae aliquam.
+        {/* Top Pokemon Rankings */}
+        <h2 style={{ textAlign: 'center', marginBottom: '1rem' }}>Top Pokémon</h2>
+        <div id="2" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem', borderBottom: '2px solid #dee2e6', paddingBottom: '2rem' }}>
+          {renderPokemonLeague('Major')}
+          <div style={{ width: '1px', backgroundColor: '#dee2e6' }} />
+          {renderPokemonLeague('Intermediate')}
+          <div style={{ width: '1px', backgroundColor: '#dee2e6' }} />
+          {renderPokemonLeague('Minor')}
+        </div>
+
+        <div id="3">
+          <h1 style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '16px' }}>Drafting and Trading Rules</h1>
+          <br />1. On Draft Day everyone will pick 10 Pokemon in a snake draft format.
+          <br />2. You will be given 95 points to draft with and you can not exceed this limit.
+          <br />3. You can only draft 2 Pokemon worth 17 points of more.
+          <br />4. Once you have drafted you will have 10 additional trades you can make with the Tier List. You can only make trades on Sundays and after you've completed your battle for the week. First you sell the Pokemon on your team and then buy the new one from the Tier List.
         </div>
 
         <div>
-          urna erat id justo. Cras dapibus consequat felis, vel imperdiet elit pretium ut. Morbi varius, lacus non pharetra scelerisque, elit diam
-          accumsan sapien, eget dignissim odio purus id libero. Suspendisse vulputate nisi massa, a laoreet metus imperdiet tempus. Mauris at rhoncus
-          eros, et feugiat felis. Vivamus quis metus volutpat, maximus lectus vitae, interdum augue.
+          <h1 style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '16px' }}>Battling Rules</h1>
+          <br />1. Battles are due the Sunday of that week at 11:59pm. Without an extension the ruling of the battle will be decided by the Champion.
+          <br />2. All battles are 6v6 and Best of 3 in on our custom server under the format ' '.
+          <br />3. All battle replays must be submitted in the #replay channel on the discord. Any battle without a replay will be ruled null
+          <br />4. You have to use the team of 10 Pokemon you had the Monday at 12am for your week's battle.
         </div>
 
         <div>
-          Cras molestie tortor vel tellus iaculis congue. Nunc non ex neque. Praesent lobortis finibus lorem, vitae blandit risus sollicitudin sed.
-          Proin viverra viverra molestie. Aliquam et consectetur velit. Nulla luctus mauris nulla, vel maximus justo vulputate nec. In congue tincidunt
-          urna at lacinia. Etiam nec ante at turpis vulputate semper ac quis enim.
-          Curabitur a elit odio. Duis sit amet ante turpis. In pulvinar vel massa in luctus. Aliquam erat volutpat. Vivamus et nisl nec lorem imperdiet
-          efficitur. Suspendisse eget nisl sed dolor consequat eleifend in ut nulla. Praesent aliquet, purus vitae rutrum dapibus, quam nisi mollis lorem,
-          eu ornare tortor ante eget dui. In a euismod metus, eget efficitur dolor. Donec dictum ligula id vestibulum laoreet. Nullam ultricies maximus
-          eros in ullamcorper. Curabitur convallis, magna congue commodo dictum, sem dui eleifend augue, et condimentum sem nisl ut quam. Integer vel
-          diam dolor.
-          Quisque eget finibus lectus. Curabitur feugiat non purus ullamcorper luctus.
+          <h1 style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '16px' }}>Clauses</h1>
+          <br />1. Sleep Cause: You can only put 1 of your opponent's Pokemon to sleep at a time. If the opponent puts their own Pokemon to sleep that does not count toward's your 1 sleep at a time.
+          <br />2. Endless Battles: You can not purposely create a scerino where a battle can never end.
+          <br />3. Species Clause: You can not have the same species of Pokemon on your team when you battle
+          <br />4. Item Clause: All Pokemon on a team must be holding unique items from each other
         </div>
 
         <div>
-          Quisque et posuere justo. Morbi sed nibh eu libero pretium sollicitudin nec at lorem. Praesent quis lacus nec turpis volutpat sollicitudin
-          eget nec erat. Nam sed enim auctor, blandit justo sed, euismod diam. Nulla molestie maximus orci, eu feugiat nunc fermentum ac. Praesent ligula
-          diam, dictum eget nunc pharetra, pellentesque pulvinar massa. Sed vitae nunc id quam varius iaculis et non libero. Nulla rutrum cursus imperdiet.
-          Phasellus non lectus augue. Vivamus venenatis eros elit, ut tincidunt purus posuere sit amet.
+          <br />
+          <h1 style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '16px' }}>Ban List</h1>
+          <br />1. Evasion <br />Items: Bright Powder, Lax Incense <br />Moves: Accupressure, Double Team, Minimize <br />Abilities: Arena Trap, Sand Veil, Snow Cloak, Tangled Feet, Wonder Skin
+          <br />2. OHKO Moves
+          <br />3. The following moves: Flash, Kinesis, Mud Slap, Sand Attack, Smokescreen, Revival Blessing, Dark Void, Swagger, Hidden Power
+          <br />4. The following abilities: Shadow Tag (expect Mega Gengar), Moody
         </div>
 
-        <div>
-          Donec vel mi turpis. Maecenas efficitur, metus iaculis accumsan vulputate, nulla augue consectetur tortor, at ullamcorper diam enim at ex.
-          Quisque at congue lorem. Sed in dignissim dui, imperdiet interdum sem. Duis blandit sem a risus viverra congue. In congue, nibh non euismod viverra,
-          libero ipsum lacinia arcu, vel ultrices nisi orci id justo. Pellentesque in dignissim enim, nec condimentum nisl. Nullam at orci nulla. Aliquam in
-          nisi mollis, bibendum nibh rhoncus, gravida neque. Praesent dignissim elit vitae arcu congue, porta mollis diam egestas. Etiam rutrum id orci eget
-          finibus. Cras eu nunc et erat congue ultricies in quis lacus.
-        </div>
-
-        <h1 id="test"> hi</h1>
+        <h1></h1>
       </div>
     </main>
   );

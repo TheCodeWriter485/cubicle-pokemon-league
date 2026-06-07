@@ -218,16 +218,16 @@ export default function Teams() {
 
     useEffect(() => {
         async function loadData() {
-            const authRes = await fetch("http://localhost:3030/auth/status", { credentials: "include" });
+            const authRes = await fetch("http://129.80.79.84:3030/auth/status", { credentials: "include" });
             const authData = await authRes.json();
             setLoggedIn(authData.loggedin);
             setUsername(authData.username ?? "");
 
-            const teamRes = await fetch("http://localhost:3030/team/full");
+            const teamRes = await fetch("http://129.80.79.84:3030/team/full");
             const teamData = await teamRes.json();
             setTeams(teamData);
 
-            const matchRes = await fetch("http://localhost:3030/matches");
+            const matchRes = await fetch("http://129.80.79.84:3030/matches");
             const matchData = await matchRes.json();
             setMatches(matchData);
         }

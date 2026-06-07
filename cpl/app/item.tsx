@@ -96,7 +96,7 @@ export default function Item(props: { name: string, value: number, image: number
     }, [])
 
     async function checkLogin() {
-        const response = await fetch("http://localhost:3030/auth/status", {
+        const response = await fetch("http://129.80.79.84:3030/auth/status", {
             credentials: "include"
         });
         const data = await response.json();
@@ -126,7 +126,7 @@ export default function Item(props: { name: string, value: number, image: number
             return;
         }
 
-        const response = await fetch("http://localhost:3030/team");
+        const response = await fetch("http://129.80.79.84:3030/team");
         const teams = await response.json();
         const userTeam = teams.find((team: any) => team.Username === username);
 
@@ -141,7 +141,7 @@ export default function Item(props: { name: string, value: number, image: number
             return;
         }
 
-        const purchaseResponse = await fetch("http://localhost:3030/teamitem/create", {
+        const purchaseResponse = await fetch("http://129.80.79.84:3030/teamitem/create", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ team_id: userTeam.id, item: props.name })
@@ -150,7 +150,7 @@ export default function Item(props: { name: string, value: number, image: number
         const result = await purchaseResponse.json();
 
 if (purchaseResponse.ok) {
-    await fetch("http://localhost:3030/team/updatepoints", {
+    await fetch("http://129.80.79.84:3030/team/updatepoints", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -160,7 +160,7 @@ if (purchaseResponse.ok) {
     });
 
     // Log the trade
-    await fetch("http://localhost:3030/tradelog/create", {
+    await fetch("http://129.80.79.84:3030/tradelog/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -250,6 +250,7 @@ if (purchaseResponse.ok) {
                         <hr style={{ borderColor: '#e3d109' }} />
                         <div className="d-flex justify-content-center gap-2">
                             <Button variant="success" size="sm" onClick={handlePurchase}>Buy</Button>
+
                         </div>
                     </Popover.Body>
                 </Popover>

@@ -30,7 +30,7 @@ export default function TeamForm() {
         e.preventDefault();
         setError('');
         try {
-            const res = await fetch('http://localhost:3030/team/create', {
+            const res = await fetch('http://129.80.79.84:3030/team/create', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(form)

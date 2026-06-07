@@ -417,7 +417,7 @@ export default function MatchForm({ match, onClose }: { match?: Match, onClose?:
         const match_data = buildMatchData(validation.rounds);
 
         try {
-            const response = await fetch('http://localhost:3030/matches/update', {
+            const response = await fetch('http://129.80.79.84:3030/matches/update', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
