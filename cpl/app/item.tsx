@@ -7,9 +7,8 @@ import Popover from 'react-bootstrap/Popover';
 // Maps item name to PokeAPI pokemon slug
 const ITEM_TO_POKEMON: Record<string, string> = {
     // Mega Stones
-'Abomasite': 'abomasnow-mega',
+    'Abomasite': 'abomasnow-mega',
     'Absolite': 'absol-mega',
-    'Absolite Z': 'absol-mega',
     'Aerodactylite': 'aerodactyl-mega',
     'Aggronite': 'aggron-mega',
     'Alakazite': 'alakazam-mega',
@@ -24,7 +23,6 @@ const ITEM_TO_POKEMON: Record<string, string> = {
     'Charizardite X': 'charizard-mega-x',
     'Charizardite Y': 'charizard-mega-y',
     'Garchompite': 'garchomp-mega',
-    'Garchompite Z': 'garchomp-mega-z',
     'Gardevoirite': 'gardevoir-mega',
     'Galladite': 'gallade-mega',
     'Gengarite': 'gengar-mega',
@@ -37,7 +35,6 @@ const ITEM_TO_POKEMON: Record<string, string> = {
     'Latiosite': 'latios-mega',
     'Lopunnite': 'lopunny-mega',
     'Lucarionite': 'lucario-mega',
-    'Lucarionite Z': 'lucario-mega-z',
     'Manectite': 'manectric-mega',
     'Mawilite': 'mawile-mega',
     'Medichamite': 'medicham-mega',
@@ -57,6 +54,57 @@ const ITEM_TO_POKEMON: Record<string, string> = {
     'Tyranitarite': 'tyranitar-mega',
     'Venusaurite': 'venusaur-mega',
     'Diancite': 'diancie-mega',
+    'Clefablite': 'clefable-mega',
+'Victreebelite': 'victreebel-mega',
+'Starminite': 'starmie-mega',
+'Dragoninite': 'dragonite-mega',
+'Meganiumite': 'meganium-mega',
+'Feraligite': 'feraligatr-mega',
+'Skarmorite': 'skarmory-mega',
+'Froslassite': 'froslass-mega',
+'Heatranite': 'heatran-mega',
+'Darkranite': 'darkrai-mega',
+'Emboarite': 'emboar-mega',
+'Excadrite': 'excadrill-mega',
+'Scolipite': 'scolipede-mega',
+'Scraftinite': 'scrafty-mega',
+'Eelektrossite': 'eelektross-mega',
+'Chandelurite': 'chandelure-mega',
+'Chesnaughtite': 'chesnaught-mega',
+'Delphoxite': 'delphox-mega',
+'Greninjite': 'greninja-mega',
+'Pyroarite': 'pyroar-mega',
+'Floettite': 'floetteeternal-mega',
+'Malamarite': 'malamar-mega',
+'Barbaracite': 'barbaracle-mega',
+'Dragalgite': 'dragalge-mega',
+'Hawluchanite': 'hawlucha-mega',
+'Zygardite': 'zygardecomplete-mega',
+'Drampanite': 'drampa-mega',
+'Zeraorite': 'zeraora-mega',
+'Falinksite': 'falinks-mega',
+'Raichunite X': 'raichu-mega-x',
+'Raichunite Y': 'raichu-mega-y',
+'Chimechite': 'chimecho-mega',
+'Absolite Z': 'absol-mega-z',
+'Staraptite': 'staraptor-mega',
+'Garchompite Z': 'garchomp-mega-z',
+'Lucarionite Z': 'lucario-mega-z',
+'Golurkite': 'golurk-mega',
+'Meowsticite': 'meowstic-mega',
+'Crabominite': 'crabominable-mega',
+'Golisopite': 'golisopod-mega',
+'Magearnite': 'magearna-mega',
+'Scovillainite': 'scovillain-mega',
+'Baxcalibrite': 'baxcalibur-mega',
+'Tatsugirinite': 'tatsugiri-mega',
+'Glimmoranite': 'glimmora-mega',
+'RaichuniteX': 'raichu-mega-x',
+'RaichuniteY': 'raichu-mega-y',
+'AbsoliteZ': 'absol-mega-z',
+'GarchompiteZ': 'garchomp-mega-z',
+'LucarioniteZ': 'lucario-mega-z',
+    
     // Deoxys forms
     'Attackorite': 'deoxys-attack',
     'Defendorite': 'deoxys-defense',
@@ -96,7 +144,7 @@ export default function Item(props: { name: string, value: number, image: number
     }, [])
 
     async function checkLogin() {
-        const response = await fetch("http://129.80.79.84:3030/auth/status", {
+        const response = await fetch("/api/auth/status", {
             credentials: "include"
         });
         const data = await response.json();
@@ -126,7 +174,7 @@ export default function Item(props: { name: string, value: number, image: number
             return;
         }
 
-        const response = await fetch("http://129.80.79.84:3030/team");
+        const response = await fetch("/api/team");
         const teams = await response.json();
         const userTeam = teams.find((team: any) => team.Username === username);
 
@@ -141,7 +189,7 @@ export default function Item(props: { name: string, value: number, image: number
             return;
         }
 
-        const purchaseResponse = await fetch("http://129.80.79.84:3030/teamitem/create", {
+        const purchaseResponse = await fetch("/api/teamitem/create", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ team_id: userTeam.id, item: props.name })
@@ -150,7 +198,7 @@ export default function Item(props: { name: string, value: number, image: number
         const result = await purchaseResponse.json();
 
 if (purchaseResponse.ok) {
-    await fetch("http://129.80.79.84:3030/team/updatepoints", {
+    await fetch("/api/team/updatepoints", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -160,7 +208,7 @@ if (purchaseResponse.ok) {
     });
 
     // Log the trade
-    await fetch("http://129.80.79.84:3030/tradelog/create", {
+    await fetch("/api/tradelog/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

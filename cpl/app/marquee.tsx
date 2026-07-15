@@ -61,14 +61,14 @@ const matchSummary = (match: Match) => {
     return loser ? `${winner} defeated ${loser}` : `${winner} won vs ${team1} / ${team2}`;
   }
 
-  return ` ${team1} vs ${team2}|`;
+  return ` ${team1} vs ${team2} | `;
 }
 
 export default function NewsMarquee() {
   const [matches, setMatches] = useState<Match[]>([]);
 
   useEffect(() => {
-    fetch('http://129.80.79.84:3030/matches')
+    fetch('/api/matches')
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
@@ -88,7 +88,7 @@ export default function NewsMarquee() {
     .sort((a, b) => Number(Boolean(b.done)) - Number(Boolean(a.done)));
 
   const marqueeItems = currentWeekMatches.length > 0
-    ? ["ANNOUNCING THIS WEEK'S MATCHES~~~ |", ...currentWeekMatches.map(matchSummary)]
+    ? ["ANNOUNCING THIS WEEK'S MATCHES~~~ | ", ...currentWeekMatches.map(matchSummary)]
     : ["No matches scheduled for this week"];
 
   return (

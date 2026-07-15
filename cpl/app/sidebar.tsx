@@ -1,14 +1,13 @@
 import SideBarButton from "./sidebarButton";
 
-export default function SideBar({ bookmarks })
+export default function SideBar({ bookmarks }: { bookmarks: { id: string | number, name: string }[] })
 {
     return (
         <div className="sideContainer">
-            <div className="spacer"></div>
-
-            <div className="sideNav">
-                { bookmarks.map((b) => (<SideBarButton bookmarks={ b } key={ b.id } />)) }
-            </div>
-        </div >
+		<div className ="spacer"></div>
+            {bookmarks.map((bookmark) => (
+                <SideBarButton key={bookmark.id} id={bookmark.id} name={bookmark.name} />
+            ))}
+        </div>
     );
 }

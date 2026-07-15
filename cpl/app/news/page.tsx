@@ -18,7 +18,7 @@ export default function News() {
     const bookmarks = [{ id: 'recent-trades', name: 'Trades' }]
 
     useEffect(() => {
-        fetch('http://129.80.79.84:3030/tradelog')
+        fetch('/api/tradelog')
             .then(res => res.json())
             .then(data => {
                 if (Array.isArray(data)) setTrades(data);
@@ -47,7 +47,7 @@ export default function News() {
         <main className="page">
             <SideBar bookmarks={bookmarks} />
             <div className="window">
-                <h1>News</h1>
+                <h1 style={{ textAlign: 'center', marginBottom: '1rem' }}>News</h1>
 
                 <div id="recent-trades">
                     <h2 style={{ borderBottom: '2px solid #dee2e6', paddingBottom: '0.5rem', marginBottom: '1rem' }}>

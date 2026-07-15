@@ -30,7 +30,7 @@ export default function TeamForm() {
         e.preventDefault();
         setError('');
         try {
-            const res = await fetch('http://129.80.79.84:3030/team/create', {
+            const res = await fetch('/api/team/create', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(form)
@@ -55,7 +55,7 @@ export default function TeamForm() {
                     KO: 0,
                     Dif: 0,
                     ELO: 1000,
-                    Points: 100,
+                    Points: 95,
                     trades: 20
                 });
             }
@@ -98,9 +98,9 @@ export default function TeamForm() {
                     />
                 </div>
 
-                {/* Team Name */}
+                {/* Showdown Name */}
                 <div className="flex flex-col gap-1">
-                    <label className="text-sm font-semibold">Team Name</label>
+                    <label className="text-sm font-semibold">Showdown Name</label>
                     <input
                         required
                         type="text"
@@ -204,3 +204,4 @@ export default function TeamForm() {
         </form>
     );
 }
+

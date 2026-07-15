@@ -87,14 +87,14 @@ export default function Schedule() {
     const [statsMatch, setStatsMatch] = useState<Match | null>(null);
 
     const fetchData = () => {
-        fetch('http://129.80.79.84:3030/auth/status', {
+        fetch('/api/auth/status', {
             credentials: 'include'
         })
             .then(res => res.json())
             .then(data => setIsLoggedIn(data.loggedin))
             .catch(console.error);
 
-        fetch('http://129.80.79.84:3030/matches')
+        fetch('/api/matches')
             .then(res => res.json())
             .then(data => {
                 if (Array.isArray(data)) {
@@ -104,7 +104,7 @@ export default function Schedule() {
             })
             .catch(console.error);
 
-        fetch('http://129.80.79.84:3030/team')
+        fetch('/api/team')
             .then(res => res.json())
             .then(data => {
                 if (Array.isArray(data)) {

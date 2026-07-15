@@ -12,7 +12,7 @@ export default function Navbar() {
     const [username, setUsername] = useState("")
     const [password, setPassword] = useState("")
     async function checkLogin() {
-        const response = await fetch("http://129.80.79.84:3030/auth/status", {
+        const response = await fetch("/api/auth/status", {
             credentials: "include"
         })
         const data = await response.json()
@@ -24,7 +24,7 @@ export default function Navbar() {
     }, [])
 
     const handleLogout = async () => {
-        const response = await fetch('http://129.80.79.84:3030/auth/logout', {
+        const response = await fetch('/api/auth/logout', {
             method: 'POST',
             credentials: "include",
         });
@@ -35,7 +35,7 @@ export default function Navbar() {
     };
 
     const handleLogin = async () => {
-        const response = await fetch('http://129.80.79.84:3030/auth', {
+        const response = await fetch('/api/auth', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

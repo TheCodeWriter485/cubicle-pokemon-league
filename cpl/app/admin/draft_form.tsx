@@ -11,7 +11,7 @@ export default function DraftForm() {
     const [saved, setSaved] = useState(false);
 
     useEffect(() => {
-        fetch('http://129.80.79.84:3030/draft/schedule')
+        fetch('/api/draft/schedule')
             .then(res => res.json())
             .then(data => {
                 const updated = { ...schedule };
@@ -30,7 +30,7 @@ export default function DraftForm() {
 
     async function handleSave(league: string) {
         const { draft_date, start_time, end_time } = schedule[league];
-        await fetch('http://129.80.79.84:3030/draft/set', {
+        await fetch('/api/draft/set', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ league, draft_date, start_time, end_time })

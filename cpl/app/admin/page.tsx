@@ -37,7 +37,7 @@ export default function Admin() {
     const [week, setWeek] = useState("")
 
     async function checkLogin() {
-        const response = await fetch("http://129.80.79.84:3030/auth/status", {
+        const response = await fetch("/api/auth/status", {
             credentials: "include"
         })
         const data = await response.json()
@@ -46,7 +46,7 @@ export default function Admin() {
     }
 
     async function fetchMatches() {
-        const response = await fetch("http://129.80.79.84:3030/matches")
+        const response = await fetch("/api/matches")
         const data = await response.json()
         if (Array.isArray(data)) {
             setMatches(data)
@@ -54,7 +54,7 @@ export default function Admin() {
     }
 
     async function fetchTeams() {
-        const response = await fetch("http://129.80.79.84:3030/team")
+        const response = await fetch("/api/team")
         const data = await response.json()
         if (Array.isArray(data)) {
             setTeams(data)
@@ -76,7 +76,7 @@ export default function Admin() {
         e.preventDefault()
         try {
             const formattedWeek = week + ' 00:00:00'
-            const res = await fetch("http://129.80.79.84:3030/matches/create", {
+            const res = await fetch("/api/matches/create", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ team_1: team1, team_2: team2, week: formattedWeek })
@@ -101,7 +101,7 @@ export default function Admin() {
         if (!selectedMatchId) return;
         if (!confirm("Are you sure you want to delete this match?")) return;
         try {
-            const res = await fetch(`http://129.80.79.84:3030/matches/delete/${selectedMatchId}`, {
+            const res = await fetch(`/api/matches/delete/${selectedMatchId}`, {
                 method: "DELETE"
             });
             const data = await res.json();

@@ -5,9 +5,12 @@ import Card from "../item";
 
 export default function ItemShop() {
   const [items, setItems] = useState<{ megaStones: any[], misc: any[] }>({ megaStones: [], misc: [] });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('http://129.80.79.84:3030/itemshop')
+    const delay = new Promise(resolve => setTimeout(resolve, 1000));
+
+    const fetchItems = fetch('/api/itemshop')
       .then((res) => res.json())
       .then((res) => {
         let megaStones: any[] = [];
@@ -26,6 +29,14 @@ export default function ItemShop() {
 
         setItems({ megaStones, misc });
       })
+      .catch((err) => {
+        console.error("Failed to fetch items:", err);
+      });
+
+    // Wait for both the fetch AND the 3 second delay before hiding the loader
+    Promise.all([fetchItems, delay]).finally(() => {
+      setLoading(false);
+    });
   }, [])
 
   const bookmarks = [{ id: 'mega-stone', name: 'Mega Stone' }, { id: 'misc', name: 'Misc' }]
@@ -51,7 +62,50 @@ export default function ItemShop() {
     <main className="page">
       <SideBar bookmarks={bookmarks} />
       <div className="window">
-        <h1>Item Shop</h1>
+
+        {/* Loading Screen */}
+        {loading && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            backgroundColor: 'rgba(0, 0, 0, 0.85)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 99999
+          }}>
+            <img
+              src="https://archives.bulbagarden.net/media/upload/8/87/Champions_Omni_Ring.png"
+              style={{
+                width: '150px',
+                height: '150px',
+                objectFit: 'contain',
+                animation: 'spin 1.5s linear infinite'
+              }}
+            />
+            <p style={{
+              color: 'white',
+              fontSize: '1.5rem',
+              marginTop: '1rem',
+              fontWeight: 'bold',
+              letterSpacing: '2px'
+            }}>
+              Loading...
+            </p>
+            <style>{`
+              @keyframes spin {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+              }
+            `}</style>
+          </div>
+        )}
+
+        <h1 style={{ textAlign: 'center', marginBottom: '1rem' }}>Item Shop</h1>
         {renderGroup(items.megaStones, "Mega Stone", "mega-stone")}
         {renderGroup(items.misc, "Misc", "misc")}
       </div>

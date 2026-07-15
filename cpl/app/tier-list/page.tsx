@@ -37,29 +37,33 @@ export default function TierList() {
     const [tradingAllowed, setTradingAllowed] = useState(false);
 
 async function fetchPokemon() {
-    const res = await fetch('http://129.80.79.84:3030/pokedata');
-    const data = await res.json();
+    try {
+        const res = await fetch('/api/pokedata');
+        const data = await res.json();
 
-    let arr: any[][] = Array.from({ length: 21 }, () => []);
-    data.forEach((poke: any) => {
-        if (poke.PointValue <= 20) {
-            arr[poke.PointValue].push(poke);
-        }
-    });
-    setPokemon(arr);
+        let arr: any[][] = Array.from({ length: 21 }, () => []);
+        data.forEach((poke: any) => {
+            if (poke.PointValue <= 20) {
+                arr[poke.PointValue].push(poke);
+            }
+        });
+        setPokemon(arr);
 
-    const ownerMap: Record<string, string | null> = {};
-    data.forEach((poke: any) => {
-        ownerMap[poke.NamePoke] = poke.OwnedBy ?? null;
-    });
-    setOwnership(ownerMap);
-
-    // Hide loading screen once data is ready
-    setLoading(false);
+        const ownerMap: Record<string, string | null> = {};
+        data.forEach((poke: any) => {
+            ownerMap[poke.NamePoke] = poke.OwnedBy ?? null;
+        });
+        setOwnership(ownerMap);
+    } catch (err) {
+        console.error("Failed to fetch pokemon:", err);
+    } finally {
+        // Always hide loading screen whether it succeeds or fails
+        setLoading(false);
+    }
 }
 
     async function fetchSchedule() {
-        const res = await fetch('http://129.80.79.84:3030/draft/schedule');
+        const res = await fetch('/api/draft/schedule');
         const data = await res.json();
         setDraftSchedule(data);
         setTradingAllowed(isTradingAllowed(data));
@@ -155,7 +159,7 @@ async function fetchPokemon() {
                     </div>
                 )}
 
-                <h1>Tier List</h1>
+                <h1 style={{ textAlign: 'center', marginBottom: '1rem' }}>Tier List</h1>
                 {reversedTiers.map((tier, index) => {
                     const tierIndex = 20 - index;
                     return (

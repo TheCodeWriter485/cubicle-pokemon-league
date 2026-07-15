@@ -1,5 +1,4 @@
 import { useState } from "react"
-import Form from 'next/form'
 import { Description, Dialog, DialogPanel, DialogTitle } from '@headlessui/react'
 
 export default function AccountForm() {
@@ -7,9 +6,9 @@ export default function AccountForm() {
     const [password, setPassword] = useState("")
     const [isUserAdmin, setIsUserAdmin] = useState(false)
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        const response = await fetch("http://129.80.79.84:3030/account/create", {
+        const response = await fetch("/api/account/create", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -33,17 +32,17 @@ export default function AccountForm() {
     return (
         <>
             < h1 className="text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50" > Account Creation Form</h1 >
-            <Form className="flex flex-col gap-2" onSubmit={handleSubmit}>
+            <form className="flex flex-col gap-2" onSubmit={handleSubmit}>
                 <label htmlFor="username">Username</label>
                 <input className="bg-zinc-50 text-black rounded-md p-2" type="text" id="username" name="username" value={username} onChange={(e) => setUsername(e.target.value)} />
                 <label htmlFor="password">Password</label>
                 <input className="bg-zinc-50 text-black rounded-md p-2" type="password" id="password" name="password" value={password} onChange={(e) => setPassword(e.target.value)} />
                 <div className="flex flex-row gap-2">
                     <label htmlFor="isUserAdmin">Admin</label>
-                    <input className="bg-zinc-50 text-black rounded-md" type="checkbox" id="isUserAdmin" name="isUserAdmin" value={isUserAdmin} onChange={(e) => setIsUserAdmin(e.target.checked)} />
+                    <input className="bg-zinc-50 text-black rounded-md" type="checkbox" id="isUserAdmin" name="isUserAdmin" checked={isUserAdmin} onChange={(e) => setIsUserAdmin(e.target.checked)} />
                 </div>
                 <button className="bg-blue-400 text-white rounded-md p-2 hover:bg-blue-500 cursor-pointer mt-4" type="submit">Create Account</button>
-            </Form>
+            </form>
         </>
     );
 }

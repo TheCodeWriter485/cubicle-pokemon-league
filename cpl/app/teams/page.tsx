@@ -34,6 +34,7 @@ type Team = {
     League?: string
     Points?: number | string
     TrainerTip?: string
+    Epithat?: string
     Wins?: number | string
     Losses?: number | string
     KO?: number | string
@@ -71,7 +72,7 @@ function TeamCard({ team, matches, teams, loggedIn, username, onSelectMatch }: {
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span>{team.Username}</span>
+                <span>{team.Epithat} {team.Username}</span>
                 <span><strong>{team.Points} pts</strong></span>
             </div>
 
@@ -84,7 +85,7 @@ function TeamCard({ team, matches, teams, loggedIn, username, onSelectMatch }: {
                 <div><strong>L</strong><br />{team.Losses}</div>
                 <div><strong>KO</strong><br />{team.KO}</div>
                 <div><strong>Dif</strong><br />{team.Dif}</div>
-                <div><strong>Elo</strong><br />{team.Elo}</div>
+                <div><strong>Elo</strong><br />{team.ELO}</div>
             </div>
 
             <hr />
@@ -210,26 +211,34 @@ export default function Teams() {
     const [username, setUsername] = useState("");
     const [loggedIn, setLoggedIn] = useState(false);
     const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
+    const [loading, setLoading] = useState(true);
+
     const bookmarks = [
-    { id: "league-Major", name: 'Major' },
-    { id: "league-Intermediate", name: 'Inter' },
-    { id: "league-Minor", name: 'Minor' }
-];
+        { id: "league-Major", name: 'Major' },
+        { id: "league-Intermediate", name: 'Inter' },
+        { id: "league-Minor", name: 'Minor' }
+    ];
 
     useEffect(() => {
         async function loadData() {
-            const authRes = await fetch("http://129.80.79.84:3030/auth/status", { credentials: "include" });
-            const authData = await authRes.json();
-            setLoggedIn(authData.loggedin);
-            setUsername(authData.username ?? "");
+            try {
+                const authRes = await fetch("/api/auth/status", { credentials: "include" });
+                const authData = await authRes.json();
+                setLoggedIn(authData.loggedin);
+                setUsername(authData.username ?? "");
 
-            const teamRes = await fetch("http://129.80.79.84:3030/team/full");
-            const teamData = await teamRes.json();
-            setTeams(teamData);
+                const teamRes = await fetch("/api/team/full");
+                const teamData = await teamRes.json();
+                setTeams(teamData);
 
-            const matchRes = await fetch("http://129.80.79.84:3030/matches");
-            const matchData = await matchRes.json();
-            setMatches(matchData);
+                const matchRes = await fetch("/api/matches");
+                const matchData = await matchRes.json();
+                setMatches(matchData);
+            } catch (err) {
+                console.error("Failed to load team data:", err);
+            } finally {
+                setLoading(false);
+            }
         }
         loadData();
     }, []);
@@ -263,7 +272,50 @@ export default function Teams() {
         <main className="page">
             <SideBar bookmarks={bookmarks} />
             <div className="window">
-                <h1>Teams</h1>
+
+                {/* Loading Screen */}
+                {loading && (
+                    <div style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        width: '100vw',
+                        height: '100vh',
+                        backgroundColor: 'rgba(0, 0, 0, 0.85)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 99999
+                    }}>
+                        <img
+                            src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/523.png"
+                            style={{
+                                width: '150px',
+                                height: '150px',
+                                objectFit: 'contain',
+                                animation: 'spin 1.5s linear infinite'
+                            }}
+                        />
+                        <p style={{
+                            color: 'white',
+                            fontSize: '1.5rem',
+                            marginTop: '1rem',
+                            fontWeight: 'bold',
+                            letterSpacing: '2px'
+                        }}>
+                            Loading...
+                        </p>
+                        <style>{`
+                            @keyframes spin {
+                                from { transform: rotate(0deg); }
+                                to { transform: rotate(360deg); }
+                            }
+                        `}</style>
+                    </div>
+                )}
+
+                <h1 style={{ textAlign: 'center', marginBottom: '1rem' }}>Teams</h1>
                 {sortedTeams().map(group => (
                     <div key={group.league} id={`league-${group.league}`}>
                         <h2 style={{ borderBottom: '2px solid #dee2e6', paddingBottom: '0.5rem', marginBottom: '1rem' }}>

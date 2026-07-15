@@ -16,21 +16,37 @@ const path = require('path');
 const upload = multer({ storage: multer.memoryStorage() });
 
 app.use(cors({
-    origin: 'http://localhost:3000', // your frontend
+    origin: [
+        'http://localhost:3000',
+        'http://cubiclepokemondraftleague.quest',
+        'http://www.cubiclepokemondraftleague.quest'
+    ],
     credentials: true
 }))
+
 app.use(session({
     secret: 'cubiclepokemonleague',
     resave: false,
-    saveUninitialized: false
+    saveUninitialized: false,
+    cookie: {
+        secure: false,
+        httpOnly: true,
+        sameSite: 'lax'
+    }
 }))
+
 app.use(express.json());
 
-const db = mysql.createConnection({
+const db = mysql.createPool({
     host: "localhost",
     user: 'cpluser',
     password: "Gr0uD@n2022",
-    database: 'cubicleData'
+    database: 'cubicleData',
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
+    enableKeepAlive: true,
+    keepAliveInitialDelay: 10000 // ping every ~10s of idle time
 })
 
 const dbPromise = db.promise();
@@ -106,46 +122,62 @@ function getMatchStatTotals(matchData) {
     return totals;
 }
 
-async function applyMatchStatDelta(matchRow, totals, multiplier) {
+async function applyMatchStatDelta(matchRow, totals, multiplier, matchData) {
     if (!matchRow || !totals || !multiplier) return;
+
+    // Determine winner and loser team IDs
+    const team1Name = matchRow.team_1_name;
+    const team2Name = matchRow.team_2_name;
+    const winner = matchData?.match_winner;
+    const team1Won = winner === team1Name;
+    const team2Won = winner === team2Name;
 
     if (matchRow.team_1) {
         await dbPromise.query(
-            "UPDATE team SET KO = COALESCE(KO, 0) + ?, Dif = COALESCE(Dif, 0) + ? WHERE id = ?",
-            [totals.team1.ko * multiplier, totals.team1.dif * multiplier, matchRow.team_1]
+            `UPDATE team SET 
+                KO = COALESCE(KO, 0) + ?,
+                Dif = COALESCE(Dif, 0) + ?,
+                Wins = COALESCE(Wins, 0) + ?,
+                Losses = COALESCE(Losses, 0) + ?
+            WHERE id = ?`,
+            [
+                totals.team1.ko * multiplier,
+                totals.team1.dif * multiplier,
+                team1Won ? 1 * multiplier : 0,
+                team2Won ? 1 * multiplier : 0,
+                matchRow.team_1
+            ]
         );
     }
 
     if (matchRow.team_2) {
         await dbPromise.query(
-            "UPDATE team SET KO = COALESCE(KO, 0) + ?, Dif = COALESCE(Dif, 0) + ? WHERE id = ?",
-            [totals.team2.ko * multiplier, totals.team2.dif * multiplier, matchRow.team_2]
+            `UPDATE team SET 
+                KO = COALESCE(KO, 0) + ?,
+                Dif = COALESCE(Dif, 0) + ?,
+                Wins = COALESCE(Wins, 0) + ?,
+                Losses = COALESCE(Losses, 0) + ?
+            WHERE id = ?`,
+            [
+                totals.team2.ko * multiplier,
+                totals.team2.dif * multiplier,
+                team2Won ? 1 * multiplier : 0,
+                team1Won ? 1 * multiplier : 0,
+                matchRow.team_2
+            ]
         );
     }
 
     for (const [pokemon, pokemonTotals] of Object.entries(totals.pokemon)) {
         const [pokemonUpdate] = await dbPromise.query(
-            `
-                UPDATE Pokemon
-                SET
-                    Diff = COALESCE(Diff, 0) + ?,
-                    Kills = COALESCE(Kills, 0) + ?,
-                    Death = COALESCE(Death, 0) + ?,
-                    Wins = COALESCE(Wins, 0) + ?,
-                    GamesPlayed = COALESCE(GamesPlayed, 0) + ?,
-                    HistDiff = COALESCE(HistDiff, 0) + ?,
-                    HistKills = COALESCE(HistKills, 0) + ?,
-                    HistDeath = COALESCE(HistDeath, 0) + ?,
-                    HistWins = COALESCE(HistWins, 0) + ?,
-                    HistGP = COALESCE(HistGP, 0) + ?
-                WHERE NamePoke = ?
-            `,
+            `UPDATE pokemon SET
+                Diff = COALESCE(Diff, 0) + ?,
+                Kills = COALESCE(Kills, 0) + ?,
+                Death = COALESCE(Death, 0) + ?,
+                Wins = COALESCE(Wins, 0) + ?,
+                GamesPlayed = COALESCE(GamesPlayed, 0) + ?
+            WHERE NamePoke = ?`,
             [
-                pokemonTotals.diff * multiplier,
-                pokemonTotals.kills * multiplier,
-                pokemonTotals.deaths * multiplier,
-                pokemonTotals.wins * multiplier,
-                pokemonTotals.gamesPlayed * multiplier,
                 pokemonTotals.diff * multiplier,
                 pokemonTotals.kills * multiplier,
                 pokemonTotals.deaths * multiplier,
@@ -160,7 +192,7 @@ async function applyMatchStatDelta(matchRow, totals, multiplier) {
         }
 
         await dbPromise.query(
-            "UPDATE Pokemon SET Score = (COALESCE(Diff, 0) * 4) + (COALESCE(Kills, 0) * 10) + COALESCE(Wins, 0) WHERE NamePoke = ?",
+            "UPDATE pokemon SET Score = (COALESCE(Diff, 0) * 4) + (COALESCE(Kills, 0) * 10) + COALESCE(Wins, 0) WHERE NamePoke = ?",
             [pokemon]
         );
     }
@@ -172,7 +204,7 @@ app.get('/', (req, res) => {
 })
 
 app.get('/pokedata', (req, res) => {
-    const sql = " SELECT * FROM Pokemon"
+    const sql = " SELECT * FROM pokemon"
     db.query(sql, (err, data) => {
         if (err) return res.json(err);
         return res.json(data);
@@ -180,17 +212,27 @@ app.get('/pokedata', (req, res) => {
 })
 
 app.post('/pokemon/claim', (req, res) => {
-    let username = req.body.username;
-    let pokemonName = req.body.pokemonName;
-
-    db.query('UPDATE Pokemon SET OwnedBy = ? WHERE NamePoke = ?', [username, pokemonName], (err, results) => {
-        if (err) return res.json(err);
+    console.log("=== CLAIM REQUEST RECEIVED ===");
+    console.log("Body:", req.body);
+    
+    const { username, pokemonName } = req.body;
+    
+    console.log("Parsed username:", username);
+    console.log("Parsed pokemonName:", pokemonName);
+    
+    db.query('UPDATE pokemon SET OwnedBy = ? WHERE NamePoke = ?', [username, pokemonName], (err, results) => {
+        if (err) {
+            console.log("DB ERROR:", err);
+            return res.status(500).json({ error: err.message });
+        }
+        console.log("Query results:", results);
+        console.log("Affected rows:", results.affectedRows);
         return res.json(results);
     });
 });
 
 app.get('/pokemon/ownership/:name', (req, res) => {
-    db.query('SELECT OwnedBy FROM Pokemon WHERE NamePoke = ?', [req.params.name], (err, results) => {
+    db.query('SELECT OwnedBy FROM pokemon WHERE NamePoke = ?', [req.params.name], (err, results) => {
         if (err) return res.json(err);
         return res.json(results[0]);
     });
@@ -231,7 +273,7 @@ app.get('/team/full', (req, res) => {
 app.post('/team/create', (req, res) => {
     const { Username, League, TeamName, Logo, Epithat, TrainerTip, Season, Wins, Losses, KO, Dif, ELO, Points, trades, showdown_acct } = req.body;
     db.query(
-        'INSERT INTO team (Username, League, TeamName, Logo, Epithat, TrainerTip, Season, Wins, Losses, KO, Dif, Elo, Points, trades, showdown_acct) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        'INSERT INTO team (Username, League, TeamName, Logo, Epithat, TrainerTip, Season, Wins, Losses, KO, Dif, Elo, Points, trades, showdown_acct) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
         [Username, League, TeamName, Logo, Epithat, TrainerTip, Season, Wins, Losses, KO, Dif, ELO, Points, trades, showdown_acct],
         (err, results) => {
             if (err) return res.json(err);
@@ -676,7 +718,7 @@ app.post('/admin/tierlist/update', upload.single('csv'), (req, res) => {
     }
 });
 
-app.listen(3030, () => {
+app.listen(3030, '0.0.0.0', () => {
     console.log("listening");
 })
 

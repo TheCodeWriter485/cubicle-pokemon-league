@@ -8,7 +8,7 @@ export default function History()
       <SideBar bookmarks={ bookmarks } />
       <div className="window">
 
-        <h1>
+        <h1 style={{ textAlign: 'center', marginBottom: '1rem' }}>
           history
         </h1>
       </div>
