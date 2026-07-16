@@ -27,7 +27,13 @@ export default function Home() {
   const getLeagueTeams = (league: string) => {
     return teams
       .filter(t => t.League === league)
-      .sort((a, b) => b.ELO - a.ELO);
+      .sort((a, b) => {
+        const netWinsA = (Number(a.Wins) || 0) - (Number(a.Losses) || 0);
+        const netWinsB = (Number(b.Wins) || 0) - (Number(b.Losses) || 0);
+
+        // Keep ties stable and meaningful by using ELO, then team name.
+        return netWinsB - netWinsA || (Number(b.ELO) || 0) - (Number(a.ELO) || 0) || String(a.TeamName).localeCompare(String(b.TeamName));
+      });
   };
 
   const getTopPokemon = (league: string) => {
@@ -55,11 +61,14 @@ export default function Home() {
         <h3 style={{ textAlign: 'center', borderBottom: '2px solid #dee2e6', paddingBottom: '0.5rem', marginBottom: '1rem' }}>
           {league} League
         </h3>
-        <ol style={{ paddingLeft: '1.5rem' }}>
-          {leagueTeams.map((team) => (
+        <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+          {leagueTeams.map((team, index) => (
             <li key={team.id} style={{ marginBottom: '8px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontWeight: 'bold' }}>{team.TeamName}</span>
+                <span style={{ fontWeight: 'bold' }}>
+                  <span style={{ color: '#6c757d', marginRight: '6px' }}>#{index + 1}</span>
+                  {team.TeamName}
+                </span>
                 <span style={{ fontSize: '0.85rem', color: '#6c757d', marginLeft: '8px' }}>
                   {team.Wins}W / {team.Losses}L
                 </span>
@@ -69,7 +78,7 @@ export default function Home() {
               </div>
             </li>
           ))}
-        </ol>
+        </ul>
       </div>
     );
   };

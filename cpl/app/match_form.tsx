@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { parseMatchData } from './utils';
 
 type RoundPlayer = {
@@ -77,27 +77,23 @@ const cleanReplayUrl = (url: string) => {
 }
 
 // Parse a Showdown HTML replay file into the same format as the JSON API
-const parseHtmlReplay = (html: string): { id: string, log: string, p1: string, p2: string } | null => {
+const parseHtmlReplay = (html: string): { id: string, log: string, players: [string, string] } | null => {
     try {
-        // Extract battle log from <script type="text/plain" class="battle-log-data">
-        const logMatch = html.match(/<script[^>]+class="battle-log-data"[^>]*>([\s\S]*?)<\/script>/);
-        if (!logMatch) return null;
-        const log = logMatch[1];
+        const document = new DOMParser().parseFromString(html, "text/html");
+        const log = document.querySelector("script.battle-log-data")?.textContent?.trim();
+        if (!log) return null;
 
         // Extract player names from |player|p1|Name| and |player|p2|Name|
         const p1Match = log.match(/\|player\|p1\|([^|]+)\|/);
         const p2Match = log.match(/\|player\|p2\|([^|]+)\|/);
         if (!p1Match || !p2Match) return null;
 
-        // Extract replay id from the hidden input
-        const idMatch = html.match(/name="replayid" value="([^"]+)"/);
-        const id = idMatch ? idMatch[1] : `html-${Date.now()}`;
+        const id = document.querySelector<HTMLInputElement>('input[name="replayid"]')?.value || `html-${Date.now()}`;
 
         return {
             id,
             log,
-            p1: p1Match[1],
-            p2: p2Match[1]
+            players: [p1Match[1], p2Match[1]]
         };
     } catch (err) {
         console.error("Failed to parse HTML replay:", err);
@@ -106,6 +102,7 @@ const parseHtmlReplay = (html: string): { id: string, log: string, p1: string, p
 }
 
 export default function MatchForm({ match, onClose }: { match?: Match, onClose?: () => void }) {
+    const fileInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
     const teamName = (side: 1 | 2) => {
         if (!match) return "";
         const name = side === 1 ? match.team_1_name : match.team_2_name;
@@ -298,16 +295,15 @@ export default function MatchForm({ match, onClose }: { match?: Match, onClose?:
                 return;
             }
 
-            // Convert to the same format as the JSON API response
-            const fakeJsonData = {
+            // parseMatchData consumes the same id, log, and players fields returned by
+            // Showdown's JSON replay endpoint.
+            processRoundData({
                 id: parsed.id,
                 log: parsed.log,
-                p1: parsed.p1,
-                p2: parsed.p2
-            };
-
-            processRoundData(fakeJsonData, round, `html-file:${file.name}`);
+                players: parsed.players
+            }, round, `html-file:${file.name}`);
         };
+        reader.onerror = () => setFormError("Could not read the selected HTML replay file.");
         reader.readAsText(file);
     }
 
@@ -458,17 +454,32 @@ export default function MatchForm({ match, onClose }: { match?: Match, onClose?:
             </div>
 
             {/* HTML file upload */}
-            <div className="flex gap-2 items-center flex-wrap">
-                <span className="text-sm text-zinc-500">or upload HTML file:</span>
+            <div className="flex items-center gap-3 rounded-md border border-dashed border-zinc-300 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-900/40">
+                <span className="text-sm text-zinc-600 dark:text-zinc-400">Or upload a saved replay:</span>
                 <input
+                    ref={(element) => { fileInputRefs.current[round] = element; }}
+                    id={`round${round}-html-file`}
                     type="file"
-                    accept=".html"
-                    className="text-sm"
+                    accept=".html,.htm,text/html"
+                    className="sr-only"
                     onChange={(e) => {
                         const file = e.target.files?.[0];
                         if (file) handle_html_file(file, round);
+                        e.currentTarget.value = "";
                     }}
                 />
+                <button
+                    className="rounded-md bg-zinc-700 px-3 py-2 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-200 dark:text-zinc-900 dark:hover:bg-white"
+                    type="button"
+                    onClick={() => fileInputRefs.current[round]?.click()}
+                >
+                    Choose HTML file
+                </button>
+                {url.startsWith('html-file:') && (
+                    <span className="min-w-0 truncate text-sm text-zinc-600 dark:text-zinc-400" title={url.slice('html-file:'.length)}>
+                        {url.slice('html-file:'.length)}
+                    </span>
+                )}
             </div>
 
             {/* Show/hide loaded data */}

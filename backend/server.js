@@ -122,7 +122,7 @@ function getMatchStatTotals(matchData) {
     return totals;
 }
 
-async function applyMatchStatDelta(matchRow, totals, multiplier, matchData) {
+async function applyMatchStatDelta(matchRow, totals, multiplier, matchData, connection = dbPromise) {
     if (!matchRow || !totals || !multiplier) return;
 
     // Determine winner and loser team IDs
@@ -133,7 +133,7 @@ async function applyMatchStatDelta(matchRow, totals, multiplier, matchData) {
     const team2Won = winner === team2Name;
 
     if (matchRow.team_1) {
-        await dbPromise.query(
+        await connection.query(
             `UPDATE team SET 
                 KO = COALESCE(KO, 0) + ?,
                 Dif = COALESCE(Dif, 0) + ?,
@@ -151,7 +151,7 @@ async function applyMatchStatDelta(matchRow, totals, multiplier, matchData) {
     }
 
     if (matchRow.team_2) {
-        await dbPromise.query(
+        await connection.query(
             `UPDATE team SET 
                 KO = COALESCE(KO, 0) + ?,
                 Dif = COALESCE(Dif, 0) + ?,
@@ -169,7 +169,7 @@ async function applyMatchStatDelta(matchRow, totals, multiplier, matchData) {
     }
 
     for (const [pokemon, pokemonTotals] of Object.entries(totals.pokemon)) {
-        const [pokemonUpdate] = await dbPromise.query(
+        const [pokemonUpdate] = await connection.query(
             `UPDATE pokemon SET
                 Diff = COALESCE(Diff, 0) + ?,
                 Kills = COALESCE(Kills, 0) + ?,
@@ -191,7 +191,7 @@ async function applyMatchStatDelta(matchRow, totals, multiplier, matchData) {
             throw new Error(`Pokemon not found while applying match stats: ${pokemon}`);
         }
 
-        await dbPromise.query(
+        await connection.query(
             "UPDATE pokemon SET Score = (COALESCE(Diff, 0) * 4) + (COALESCE(Kills, 0) * 10) + COALESCE(Wins, 0) WHERE NamePoke = ?",
             [pokemon]
         );
@@ -565,10 +565,15 @@ app.post("/matches/update", async (req, res) => {
     const done = 1;
     const sql = "UPDATE matches SET match_data = ?, done = ?, winner = ?, round1_url = ?, round2_url = ?, round3_url = ? WHERE match_id = ?";
 
-    try {
-        await dbPromise.beginTransaction();
+    let connection;
+    let transactionStarted = false;
 
-        const [matches] = await dbPromise.query(`
+    try {
+        connection = await dbPromise.getConnection();
+        await connection.beginTransaction();
+        transactionStarted = true;
+
+        const [matches] = await connection.query(`
             SELECT
                 matches.*,
                 team1.TeamName AS team_1_name,
@@ -582,14 +587,16 @@ app.post("/matches/update", async (req, res) => {
             FOR UPDATE
         `, [match_id]);
         if (!matches.length) {
-            await dbPromise.rollback();
+            await connection.rollback();
+            transactionStarted = false;
             return res.status(404).json({ error: "Match not found" });
         }
 
         const matchRow = matches[0];
         const validationError = validateSubmittedMatchData(matchRow, match_data, [round1_url, round2_url, round3_url]);
         if (validationError) {
-            await dbPromise.rollback();
+            await connection.rollback();
+            transactionStarted = false;
             return res.status(400).json({ error: validationError });
         }
 
@@ -601,19 +608,28 @@ app.post("/matches/update", async (req, res) => {
         const winner = matchDataToStore.match_winner;
 
         if (matchRow.done && previousMatchData) {
-            await applyMatchStatDelta(matchRow, getMatchStatTotals(previousMatchData), -1);
+            await applyMatchStatDelta(matchRow, getMatchStatTotals(previousMatchData), -1, previousMatchData, connection);
         }
 
-        await applyMatchStatDelta(matchRow, getMatchStatTotals(match_data), 1);
+        await applyMatchStatDelta(matchRow, getMatchStatTotals(match_data), 1, matchDataToStore, connection);
 
-        const [data] = await dbPromise.query(sql, [JSON.stringify(matchDataToStore), done, winner, round1_url, round2_url, round3_url, match_id]);
-        await dbPromise.commit();
+        const [data] = await connection.query(sql, [JSON.stringify(matchDataToStore), done, winner, round1_url, round2_url, round3_url, match_id]);
+        await connection.commit();
+        transactionStarted = false;
 
         return res.json(data);
     } catch (err) {
-        await dbPromise.rollback();
+        if (transactionStarted) {
+            try {
+                await connection.rollback();
+            } catch (rollbackErr) {
+                console.error("Could not roll back match update:", rollbackErr);
+            }
+        }
         console.error("Could not update match stats:", err);
         return res.status(500).json({ error: err.message || "Could not update match stats" });
+    } finally {
+        connection?.release();
     }
 })
 
