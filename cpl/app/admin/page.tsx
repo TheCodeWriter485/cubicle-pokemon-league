@@ -122,10 +122,10 @@ export default function Admin() {
     const teamName = (team: Team) => team.TeamName || team.Username || `Team ${team.id}`
     const matchTeam1Name = (match: Match) => match.team_1_name || match.player1 || `Team ${match.team_1}`
     const matchTeam2Name = (match: Match) => match.team_2_name || match.player2 || `Team ${match.team_2}`
-    const bookmarks = [{ id: 1, name: 'button' }]
+    const bookmarks = []
 
     return (
-        <main className="page flex min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans">
+        <main className="page">
             <SideBar bookmarks={bookmarks} />
             <div className="window flex-1 p-8 md:p-12 overflow-y-auto w-full max-w-5xl mx-auto">
                 {loggedIn && isAdmin ?

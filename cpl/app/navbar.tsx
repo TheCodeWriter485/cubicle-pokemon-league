@@ -83,11 +83,11 @@ export default function Navbar() {
                     <Link className='navButton1' href="/item-shop"> </Link>
                     <Link className='link' href="/item-shop">Item Shop</Link>
                 </div>                
-                <div className='navDiv'>
+                {/* <div className='navDiv'>
 
                     <Link className='navButton2' href="/history"> </Link>
                     <Link className='link' href="/history">History</Link>
-                </div>
+                </div> */}
                 {isAdmin ? (
                     <div className='navDiv'>
                         <Link className='navButton1' href="/admin"></Link>
@@ -96,14 +96,14 @@ export default function Navbar() {
                 ) : <></>}
                 <div className='navDiv'>
                     {loggedIn ? (
-                        <div>
+                        <div className='navDiv'>
                             <button className='navButton1' onClick={handleLogout}></button>
                             <button className='link' onClick={(e) => {
                                 handleLogout();
                             }}>Sign Out</button>
                         </div>
                     ) : (
-                        <div>
+                        <div className='navDiv'>
                             <button className='navButton1' onClick={() => setIsOpen(true)}></button>
                             <button className='link' onClick={() => setIsOpen(true)}>Login</button>
                         </div>
@@ -112,7 +112,7 @@ export default function Navbar() {
                 <Dialog open={isOpen} onClose={() => setIsOpen(false)} className="relative z-50">
                     <div className="fixed inset-0 flex w-screen items-center justify-center p-4">
                         <DialogPanel className="max-w-lg space-y-4 border bg-white dark:bg-black p-12">
-                            <DialogTitle className="font-bold">Account Login</DialogTitle>
+                            <DialogTitle className="text-2xl font-bold">Account Login</DialogTitle>
                             <form>
                                 <label htmlFor="username">Username</label>
                                 <input type="text" id="username" name="username" className="dark:text-black bg-white" value={username} onChange={(e) => setUsername(e.target.value)} />

@@ -157,6 +157,7 @@
   flex-direction: column;
   gap: 8px;
   background: #20232d;
+  
 }
 
 .sideNav
@@ -177,7 +178,7 @@
 }
 
 .spacer
-{
+{  
       height: 5em;
 }
 

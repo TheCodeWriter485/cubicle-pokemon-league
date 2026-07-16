@@ -215,7 +215,7 @@ export default function Teams() {
 
     const bookmarks = [
         { id: "league-Major", name: 'Major' },
-        { id: "league-Intermediate", name: 'Inter' },
+        // { id: "league-Intermediate", name: 'Inter' },
         { id: "league-Minor", name: 'Minor' }
     ];
 

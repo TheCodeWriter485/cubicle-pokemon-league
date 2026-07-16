@@ -79,7 +79,6 @@ const toShowdownId = (value?: string | null) => {
 }
 
 export default function Schedule() {
-    const bookmarks = [{ id: 1, name: 'button' }]
     const [matches, setMatches] = useState<Match[]>([]);
     const [teams, setTeams] = useState<Team[]>([]);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -174,35 +173,43 @@ export default function Schedule() {
     const groupedMatches = matches.reduce((acc, match) => {
         const weekDate = new Date(match.week).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' });
         if (!acc[weekDate]) {
-            acc[weekDate] = [];
+            acc[weekDate] = {
+                id: `week-${new Date(match.week).getTime()}`,
+                matches: []
+            };
         }
-        acc[weekDate].push(match);
+        acc[weekDate].matches.push(match);
         return acc;
-    }, {} as Record<string, Match[]>);
+    }, {} as Record<string, { id: string, matches: Match[] }>);
+
+    const bookmarks = [
+        ...Object.entries(groupedMatches).map(([weekDate, group]) => ({
+            id: group.id,
+            name: weekDate.split(',')[0] // Only take the month and day for the sidebar button
+        }))
+    ];
 
     return (
-        <main className="page flex min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100">
+        <main className="page">
             <SideBar bookmarks={bookmarks} />
 
             <div className="window flex-1 p-8 md:p-12 overflow-y-auto w-full max-w-7xl mx-auto">
-                <header className="mb-10">
-                    <h1 className="text-4xl font-extrabold tracking-tight">
-                        Match Schedule
-                    </h1>
+                <header id="schedule" className="mb-10">
+                    <h1 className="text-4xl font-extrabold tracking-tight" style={{ textAlign: 'left', margin: '1rem 0 1rem 0rem' }}>Match Schedule</h1>
                     <p className="mt-2 text-zinc-500 dark:text-zinc-400">
                         View upcoming matches and past results.
                     </p>
                 </header>
 
                 <div className="space-y-12">
-                    {Object.entries(groupedMatches).map(([weekDate, weekMatches]: [string, Match[]]) => (
-                        <div key={weekDate}>
+                    {Object.entries(groupedMatches).map(([weekDate, group]) => (
+                        <div id={group.id} key={weekDate} style={{paddingTop: '2rem'}}>
                             <h2 className="text-2xl font-bold mb-6 flex items-center gap-4 text-zinc-800 dark:text-zinc-200">
-                                <span className="whitespace-nowrap">Week of {weekDate}</span>
+                                <span className="whitespace-nowrap" style={{borderBottom: '2px solid #dee2e6'}}>Week of {weekDate}</span>
                                 <div className="h-px bg-zinc-200 dark:bg-zinc-800 flex-1"></div>
                             </h2>
-                            <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-                                {weekMatches.map((match: Match) => (
+                            <div style={{marginTop: '1rem'}} className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                                {group.matches.map((match: Match) => (
                                     <div key={match.match_id}
                                         role="button"
                                         tabIndex={0}
