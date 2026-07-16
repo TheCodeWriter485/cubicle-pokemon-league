@@ -122,7 +122,14 @@ export default function Admin() {
     const teamName = (team: Team) => team.TeamName || team.Username || `Team ${team.id}`
     const matchTeam1Name = (match: Match) => match.team_1_name || match.player1 || `Team ${match.team_1}`
     const matchTeam2Name = (match: Match) => match.team_2_name || match.player2 || `Team ${match.team_2}`
-    const bookmarks = []
+    const bookmarks = [
+        { id: 'account-management', name: 'Accounts' },
+        { id: 'create-match', name: 'Create Match' },
+        { id: 'update-match', name: 'Edit Match' },
+        { id: 'draft-schedule', name: 'Draft Schedule' },
+        { id: 'create-team', name: 'New Team' },
+        { id: 'tier-list', name: 'Tier List' },
+    ]
 
     return (
         <main className="page">
@@ -137,12 +144,12 @@ export default function Admin() {
                             <p className="text-zinc-500 dark:text-zinc-400">Manage accounts, create team matches, and update match data.</p>
                         </header>
 
-                        <div className="bg-white dark:bg-zinc-900/80 p-8 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+                        <div id="account-management" className="bg-white dark:bg-zinc-900/80 p-8 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
                             <h2 className="text-2xl font-bold mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-2">Account Management</h2>
                             <AccountForm />
                         </div>
 
-                        <div className="bg-white dark:bg-zinc-900/80 p-8 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+                        <div id="create-match" className="bg-white dark:bg-zinc-900/80 p-8 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
                             <h2 className="text-2xl font-bold mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-2">Create New Match</h2>
                             <form onSubmit={handleCreateMatch} className="space-y-4">
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -206,7 +213,7 @@ export default function Admin() {
                             </form>
                         </div>
 
-                        <div className="bg-white dark:bg-zinc-900/80 p-8 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+                        <div id="update-match" className="bg-white dark:bg-zinc-900/80 p-8 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
                             <h2 className="text-2xl font-bold mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-2">Update or Delete Match</h2>
                             <div className="flex flex-col gap-2 mb-8">
                                 <label className="text-sm font-semibold">Select Match to Edit or Delete</label>
@@ -249,18 +256,18 @@ export default function Admin() {
                         </div>
 
                         {/* Draft Schedule */}
-                        <div className="bg-white dark:bg-zinc-900/80 p-8 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+                        <div id="draft-schedule" className="bg-white dark:bg-zinc-900/80 p-8 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
                             <h2 className="text-2xl font-bold mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-2">Draft Schedule</h2>
                             <DraftForm />
                         </div>
 
                         {/* Create New Team */}
-                        <div className="bg-white dark:bg-zinc-900/80 p-8 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+                        <div id="create-team" className="bg-white dark:bg-zinc-900/80 p-8 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
                             <h2 className="text-2xl font-bold mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-2">Create New Team</h2>
                             <TeamForm />
                         </div>
                         
-                        <div className="bg-white dark:bg-zinc-900/80 p-8 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+                        <div id="tier-list" className="bg-white dark:bg-zinc-900/80 p-8 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
     <h2 className="text-2xl font-bold mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-2">
         Update Tier List
     </h2>
